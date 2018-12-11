@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>登录异常</title>
+    <style>
+      .component-re-login {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        height: 100%;
+    }
+    </style>
+</head>
+<body>
+  <div class="component-re-login">
+    <div class="container-content">
+      <h3>Oppos ! 用户同步中... </h3>
+      <h3>请稍后重新登录 ！</h3>
+      <a th:href="${logoutUrl}">返回登录页</a>
+    </div>
+  </div>
+</body>
+</html>

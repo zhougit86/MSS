@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.meicloud.dao.ChargorMapper">
+	
+	<resultMap type="com.meicloud.model.Chargor" id="Chargor">
+       <result property="id" column="ID" jdbcType="INTEGER" javaType="java.lang.Integer"/>
+	   <result property="name" column="NAME" jdbcType="VARCHAR" javaType="java.lang.String"/>
+	   <result property="phone" column="PHONE" jdbcType="VARCHAR" javaType="java.lang.String"/>
+	   <result property="email" column="EMAIL" jdbcType="VARCHAR" javaType="java.lang.String"/>
+		<result property="queueId" column="QUEUE_ID" jdbcType="VARCHAR" javaType="java.lang.String"/>
+		<result property="queueName" column="QUEUE_NAME" jdbcType="VARCHAR" javaType="java.lang.String"/>
+    </resultMap>
+	
+	<select id="getChargorList" resultMap="Chargor" parameterType="int">
+	<![CDATA[
+		SELECT 
+		    C.ID,
+		    C.NAME,
+		    C.PHONE,
+		    C.EMAIL,
+		    C.QUEUE_ID,
+		    Q.QUEUE_NAME
+		from
+		    CM_CHARGOR C
+		    LEFT JOIN CM_QUEUE Q ON C.QUEUE_ID=Q.QUEUE_ID
+		ORDER BY C.ID ASC
+	 ]]>
+	</select>
+
+	<select id="getGroupLevelListByQueueId" resultMap="Chargor" parameterType="java.lang.String">
+		SELECT
+		    C.ID,
+		    C.NAME,
+		    C.PHONE,
+		    C.EMAIL,
+		    C.QUEUE_ID,
+		    Q.QUEUE_NAME
+		from
+		    CM_CHARGOR C
+		    LEFT JOIN CM_QUEUE Q ON C.QUEUE_ID=Q.QUEUE_ID
+		where  C.QUEUE_ID = #{queueId}
+	</select>
+
+
+	<select id="getChargor" resultMap="Chargor" parameterType="java.lang.Integer">
+		SELECT
+		    C.ID,
+		    C.NAME,
+		    C.PHONE,
+		    C.EMAIL,
+		    C.QUEUE_ID,
+		    Q.QUEUE_NAME
+		from
+		    CM_CHARGOR C
+		    LEFT JOIN CM_QUEUE Q ON C.QUEUE_ID=Q.QUEUE_ID
+		WHERE C.ID = #{id}
+	</select>
+	
+	<select id="getChargorByName" resultMap="Chargor" parameterType="java.lang.Integer">
+		SELECT
+		    C.ID,
+		    C.NAME,
+		    C.PHONE,
+		    C.EMAIL,
+		    C.QUEUE_ID,
+		    Q.QUEUE_NAME
+		from
+		    CM_CHARGOR C
+		    LEFT JOIN CM_QUEUE Q ON C.QUEUE_ID=Q.QUEUE_ID
+		WHERE C.NAME = #{name}
+	</select>
+	
+	
+		<!-- add by zouhb2 -->
+	<insert id="addChargor" parameterType="com.meicloud.model.Chargor">
+		insert into `cm_chargor` ( `NAME`, `PHONE`, `EMAIL`, `QUEUE_ID`) values (#{name}, #{phone}, #{email},#{queueId})
+	</insert>
+	
+	<update id="upadteChargor" parameterType="com.meicloud.model.Chargor">
+		update `cm_chargor` set `NAME`=#{name}, `PHONE`=#{phone},`EMAIL`=#{email},`QUEUE_ID`=#{queueId} where `ID`=#{id}
+	</update>
+	
+	<delete id="deleteChargor" parameterType="java.lang.Integer" >
+		delete from `cm_chargor` where `ID`=#{id} 
+	</delete>
+	
+	<select id="checkIfExists4New" parameterType="com.meicloud.model.Chargor" resultType="int">
+		select count(1)
+		from cm_chargor
+		where name=#{name}
+		<if test="queueId != null and queueId != ''"> and QUEUE_ID = #{queueId}</if>
+	</select>
+	
+	<select id="checkIfExists4Update" parameterType="com.meicloud.model.Chargor"
+		resultType="int">
+		<![CDATA[
+		   select 
+		      count(1)
+		   from 
+		      cm_chargor 
+		   where 
+		      name=#{name}
+		      AND ID <> #{id}
+		      <if test="queueId != null and queueId != ''"> and QUEUE_ID = #{queueId}</if>
+	   ]]>
+	</select>
+	
+	
+</mapper>

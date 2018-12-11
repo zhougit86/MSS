@@ -1,0 +1,2 @@
+alter table cm_group add IS_ERRORJOB_CONTINUE_RUN tinyint(1) DEFAULT '1' comment '组内JOB出错是否继续运行';
+alter table cm_group_chlog add IS_ERRORJOB_CONTINUE_RUN tinyint(1) DEFAULT '1' comment '组内JOB出错是否继续运行';

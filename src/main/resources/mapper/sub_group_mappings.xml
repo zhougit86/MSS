@@ -1,0 +1,722 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.meicloud.dao.SubGroupMapper">
+
+	<resultMap type="com.meicloud.model.SubGroup" id="subGroup">
+		<result property="groupId" column="GROUP_ID" jdbcType="INTEGER" javaType="int"/>
+		<result property="orderNo" column="ORDER_NO" jdbcType="INTEGER" javaType="int"/>
+	</resultMap>
+	
+	<resultMap type="com.meicloud.model.JobState" id="jobStateList">
+		<result property="jobId" column="JOB_ID" jdbcType="INTEGER" javaType="int"/>
+		<result property="groupId" column="GROUP_ID" jdbcType="INTEGER" javaType="int"/>
+		<result property="referedGroupId" column="REFERED_GROUP_ID" jdbcType="INTEGER" javaType="int"/>
+		<result property="enable" column="IS_ENABLE" jdbcType="INTEGER" javaType="boolean"/>
+		<result property="state" column="STATE" jdbcType="TINYINT" javaType="int"/>
+		<result property="msg" column="MSG" jdbcType="VARCHAR" javaType="int"/>
+		<result property="createDate" column="U_DATE" jdbcType="TIMESTAMP" javaType="java.util.Date"/>
+	</resultMap>
+	
+	<resultMap type="com.meicloud.model.SubGroup" id="candidateList">
+		<result property="groupId" column="GROUP_ID" jdbcType="INTEGER" javaType="int"/>
+		<result property="orderNo" column="ORDER_NO" jdbcType="INTEGER" javaType="int"/>
+		<result property="sordInGroup" column="IS_SORT_IN_GROUP" jdbcType="TINYINT" javaType="boolean"/>
+		<result property="referedGroupIds" column="REFERED_GROUP_IDS" jdbcType="VARCHAR" javaType="java.lang.String"/>
+		<result property="referedJobIds" column="REFERED_JOB_IDS" jdbcType="VARCHAR" javaType="java.lang.String"/>
+		<result property="runJobCount" column="runJobCount" jdbcType="INTEGER" javaType="int"/>
+	</resultMap>
+	
+	<!-- OR (RJ.STATE = #{errorState} AND J.IS_ENABLE=1 AND G.IS_ENABLE=1 ) 这个条件是为了解决出错后手动禁用作业或禁用组，让后续作业跑起来-->
+	<!-- 无排序无依赖有等待检查作业的小组 
+	<select id="getUnSordedNoReferCandidateList" parameterType="com.midea.model.SubGroup" resultMap="subGroup">
+	    <![CDATA[
+	    SELECT
+			RJ.GROUP_ID,
+			MAX(RJ.ORDER_NO) AS ORDER_NO,
+			RG.ORDER_NO_LATEST_UPDATE
+		FROM
+			cm_run_group RG
+		JOIN cm_run_job RJ ON RG.GROUP_ID = RJ.GROUP_ID
+		WHERE
+			RJ.STATE = #{watingCheckState}
+		AND RG.IS_SORT_IN_GROUP = 0
+		AND (
+			RG.REFERED_GROUP_IDS IS NULL
+			OR RG.REFERED_GROUP_IDS = ''
+		)
+		AND RJ.GROUP_ID NOT IN (
+			SELECT
+				RJ.GROUP_ID
+			FROM
+				cm_run_job RJ JOIN cm_job J on RJ.JOB_ID=J.JOB_ID JOIN cm_group G ON RJ.GROUP_ID=G.GROUP_ID
+			WHERE
+				RJ.STATE = #{watingState}
+			OR RJ.STATE = #{runningState}
+			OR (RJ.STATE = #{errorState} AND J.IS_ENABLE=1 AND G.IS_ENABLE=1)
+		)
+		GROUP BY 
+			RJ.GROUP_ID
+		HAVING
+			ORDER_NO > RG.ORDER_NO_LATEST_UPDATE
+	    ]]>
+	</select>
+	-->
+	
+	<!-- 有排序无依赖且有等待检查作业的小组 
+	AND DATE_FORMAT(RG.C_DATE,'%Y%m%d')=DATE_FORMAT(NOW(),'%Y%m%d')	
+	<select id="getSordedNoReferCandidateList" parameterType="com.midea.model.SubGroup" resultMap="subGroup">
+	    <![CDATA[
+	    SELECT
+			RJ.GROUP_ID,
+			MIN(RJ.ORDER_NO) AS ORDER_NO,
+			RG.ORDER_NO_LATEST_UPDATE
+		FROM
+			cm_run_group RG
+		JOIN cm_run_job RJ ON RG.GROUP_ID = RJ.GROUP_ID
+		WHERE
+			RJ.STATE = #{watingCheckState}
+		AND RG.IS_SORT_IN_GROUP = 1
+		AND (
+			RG.REFERED_GROUP_IDS IS NULL
+			OR RG.REFERED_GROUP_IDS = ''
+		)
+		AND RJ.GROUP_ID NOT IN (
+			SELECT
+				RJ.GROUP_ID
+			FROM
+				cm_run_job RJ JOIN cm_job J on RJ.JOB_ID=J.JOB_ID JOIN cm_group G ON RJ.GROUP_ID=G.GROUP_ID
+			WHERE
+				RJ.STATE = #{watingState}
+			OR RJ.STATE = #{runningState}
+			OR (RJ.STATE = #{errorState} AND J.IS_ENABLE=1 AND G.IS_ENABLE=1)
+		)
+		GROUP BY
+			RJ.GROUP_ID
+		HAVING
+			ORDER_NO > RG.ORDER_NO_LATEST_UPDATE
+	    ]]>
+	</select>
+	-->
+	
+	<!-- 找出有依赖无排序且有处于依赖检查的作业的组
+	<select id="getUnSordedReferCandidateList" parameterType="com.midea.model.SubGroup" resultMap="subGroup">
+	    <![CDATA[
+	    SELECT
+			RJ.GROUP_ID,
+			MIN(RJ.ORDER_NO) AS ORDER_NO,
+			RG.ORDER_NO_LATEST_UPDATE
+		FROM
+			cm_run_group RG
+		JOIN cm_run_job RJ ON RG.GROUP_ID = RJ.GROUP_ID
+		WHERE
+		    RJ.STATE = #{watingCheckState}
+		AND	RG.IS_SORT_IN_GROUP = 0
+		AND RG.REFERED_GROUP_IDS IS NOT NULL
+		AND RG.REFERED_GROUP_IDS <> ''
+		AND RJ.GROUP_ID NOT IN (
+			SELECT
+				RJ.GROUP_ID
+			FROM
+				cm_run_job RJ JOIN cm_job J on RJ.JOB_ID=J.JOB_ID JOIN cm_group G ON RJ.GROUP_ID=G.GROUP_ID
+			WHERE
+				RJ.STATE = #{watingState}
+			OR RJ.STATE = #{runningState}
+			OR (RJ.STATE = #{errorState} AND J.IS_ENABLE=1 AND G.IS_ENABLE=1)
+		)
+		GROUP BY 
+			RJ.GROUP_ID
+		HAVING
+			ORDER_NO > RG.ORDER_NO_LATEST_UPDATE
+	    ]]>
+	</select>
+	-->
+	
+	<!-- 有排序有依赖有等待检查作业的的小组 
+	<select id="getSordedAndReferCandidateList" parameterType="com.midea.model.SubGroup" resultMap="subGroup">
+	    <![CDATA[
+	    SELECT
+			RJ.GROUP_ID,
+			MIN(RJ.ORDER_NO) AS ORDER_NO,
+			RG.ORDER_NO_LATEST_UPDATE
+		FROM
+			cm_run_group RG
+		JOIN cm_run_job RJ ON RG.GROUP_ID = RJ.GROUP_ID
+		WHERE
+			RJ.STATE = #{watingCheckState}
+		AND RG.IS_SORT_IN_GROUP = 1
+		AND RG.REFERED_GROUP_IDS IS NOT NULL
+		AND RG.REFERED_GROUP_IDS <> ''
+		AND RJ.GROUP_ID NOT IN (
+			SELECT
+				RJ.GROUP_ID
+			FROM
+				cm_run_job RJ JOIN cm_job J on RJ.JOB_ID=J.JOB_ID JOIN cm_group G ON RJ.GROUP_ID=G.GROUP_ID
+			WHERE
+				RJ.STATE = #{watingState}
+			OR RJ.STATE = #{runningState}
+			OR (RJ.STATE = #{errorState} AND J.IS_ENABLE=1 AND G.IS_ENABLE=1)
+		)
+		GROUP BY
+			RJ.GROUP_ID
+		HAVING
+			ORDER_NO > RG.ORDER_NO_LATEST_UPDATE
+	    ]]>
+	</select>
+	-->
+	
+	<!-- 
+	<select id="getCandidateList" parameterType="com.meicloud.model.SubGroup" resultMap="candidateList">
+	    <![CDATA[
+			SELECT
+				RG.GROUP_ID,
+				MAX(RJ.ORDER_NO) AS ORDER_NO,
+				RG.ORDER_NO_LATEST_UPDATE AS ORDER_NO_LATEST_UPDATE,
+				RG.IS_SORT_IN_GROUP,
+				RG.REFERED_GROUP_IDS,
+				RG.REFERED_JOB_IDS
+			FROM
+				cm_run_group RG
+			JOIN cm_run_job RJ ON RG.RUN_GROUP_ID = RJ.RUN_GROUP_ID
+			WHERE
+				RJ.STATE = #{watingCheckState}
+			AND RG.GROUP_ID NOT IN (
+				SELECT DISTINCT
+					GROUP_ID
+				FROM
+					cm_run_job
+				WHERE
+					STATE = #{runningState}
+			)
+			AND RG.GROUP_ID NOT IN (
+				SELECT
+					RJ.GROUP_ID
+				FROM
+					cm_run_job RJ
+				JOIN cm_group G ON RJ.GROUP_ID = G.GROUP_ID
+				JOIN cm_job J ON RJ.JOB_ID = J.JOB_ID
+				WHERE
+					RJ.STATE =#{errorState}
+				AND date(NOW()) = date(RJ.C_DATE)
+				AND G.IS_ENABLE = 1
+				AND J.IS_ENABLE = 1
+			)
+			GROUP BY
+				RG.RUN_GROUP_ID
+			HAVING
+				ORDER_NO > ORDER_NO_LATEST_UPDATE
+	    ]]>
+	</select>
+	 -->
+	 
+	 <select id="getReferedGroupJobStateList" resultMap="jobStateList">
+	 	SELECT JS.GROUP_ID,
+			GR.REFERED_GROUP_ID,
+			JS.JOB_ID,
+			G.IS_ENABLE,
+			JS.STATE FROM cm_job_state JS 
+			LEFT JOIN cm_group_refer GR ON GR.GROUP_ID = JS.GROUP_ID
+			LEFT JOIN cm_group G ON G.GROUP_ID = JS.GROUP_ID
+			WHERE JS.STATE IN (0, 1, 2, 3) 
+			AND JS.JOB_ID NOT IN (
+						SELECT
+							j.JOB_ID
+						FROM
+							cm_job j
+						WHERE
+							j.IS_ONLINE = 0
+						OR j.IS_ENABLE = 0
+					)
+	 </select>
+	 
+	 <select id="getCandidateList" parameterType="com.meicloud.model.SubGroup" resultMap="candidateList">
+	    <![CDATA[
+			SELECT
+				DISTINCT RG.GROUP_ID,
+				ORDER_NO,
+				RG.ORDER_NO_LATEST_UPDATE AS ORDER_NO_LATEST_UPDATE,
+				RG.IS_SORT_IN_GROUP,
+				RG.REFERED_GROUP_IDS,
+				RG.REFERED_JOB_IDS
+			FROM
+				cm_run_group RG
+			JOIN cm_run_job RJ ON RG.GROUP_ID = RJ.GROUP_ID
+			WHERE
+				RJ.STATE = #{watingCheckState} and RJ.DATE_LATEST_SEND  IS NULL
+	    ]]>
+	</select>
+	 
+	<!-- 待检查 == (该组没运行中作业+该组没当天失败作业) -->
+	<!-- 无组内依赖无作业依赖无排序待检查的小组 -->
+	<!-- 无依赖无排序无运行中无当天失败有在等待作业的小组 -->
+	<select id="noGroupReferNoJobReferNoOrderSubGroupCandidateList" parameterType="com.meicloud.model.SubGroup" resultMap="subGroup">
+	    <![CDATA[
+			SELECT
+				RG.GROUP_ID,
+				MAX(RJ.ORDER_NO) AS ORDER_NO,
+				RG.ORDER_NO_LATEST_UPDATE AS ORDER_NO_LATEST_UPDATE
+			FROM
+				cm_run_group RG
+			JOIN cm_run_job RJ ON RG.RUN_GROUP_ID = RJ.RUN_GROUP_ID
+			WHERE
+				RJ.STATE = #{watingCheckState}
+			AND RG.IS_SORT_IN_GROUP = 0
+			AND (
+				RG.REFERED_GROUP_IDS IS NULL
+				OR RG.REFERED_GROUP_IDS = ''
+			)
+			AND (
+				RG.REFERED_JOB_IDS IS NULL
+				OR RG.REFERED_JOB_IDS = ''
+			)
+			AND RG.GROUP_ID NOT IN (
+				SELECT DISTINCT
+					GROUP_ID
+				FROM
+					cm_run_job
+				WHERE
+					STATE = #{runningState}
+			)
+			AND RG.GROUP_ID NOT IN (
+				SELECT
+					RJ.GROUP_ID
+				FROM
+					cm_run_job RJ
+				JOIN cm_group G ON RJ.GROUP_ID = G.GROUP_ID
+				JOIN cm_job J ON RJ.JOB_ID = J.JOB_ID
+				WHERE
+					RJ.STATE =#{errorState}
+				AND date(NOW()) = date(RJ.C_DATE)
+				AND G.IS_ENABLE = 1
+				AND J.IS_ENABLE = 1
+			)
+			GROUP BY
+				RG.RUN_GROUP_ID
+			HAVING
+				ORDER_NO > ORDER_NO_LATEST_UPDATE
+	    ]]>
+	</select>
+	
+	<!-- 无组内依赖无作业依赖有排序待检查的小组 -->
+	<!-- 无依赖有排序无运行中无当天失败有再等待中作业的小组 -->
+	<select id="noGroupReferNoJobReferOrderSubGroupCandidateList" parameterType="com.meicloud.model.SubGroup" resultMap="subGroup">
+	    <![CDATA[
+			SELECT
+				RJ.GROUP_ID AS GROUP_ID,
+				MIN(RJ.ORDER_NO) AS ORDER_NO,
+				RG.ORDER_NO_LATEST_UPDATE AS ORDER_NO_LATEST_UPDATE
+			FROM
+				cm_run_group RG
+			JOIN cm_run_job RJ ON RG.RUN_GROUP_ID = RJ.RUN_GROUP_ID
+			WHERE
+				1 = 1
+			AND RJ.STATE = #{watingCheckState}
+			AND RG.IS_SORT_IN_GROUP = 1
+			AND (
+				RG.REFERED_GROUP_IDS IS NULL
+				OR RG.REFERED_GROUP_IDS = ''
+			)
+			AND (
+				RG.REFERED_JOB_IDS IS NULL
+				OR RG.REFERED_JOB_IDS = ''
+			)
+			AND RG.GROUP_ID NOT IN (
+				SELECT DISTINCT
+					GROUP_ID
+				FROM
+					cm_run_job
+				WHERE
+					STATE = #{runningState}
+			)
+			AND RG.GROUP_ID NOT IN (
+				SELECT DISTINCT
+					RJ.GROUP_ID
+				FROM
+					cm_run_job RJ
+				JOIN cm_group G ON RJ.GROUP_ID = G.GROUP_ID
+				JOIN cm_job J ON RJ.JOB_ID = J.JOB_ID
+				WHERE
+					RJ.STATE = #{errorState}
+				AND date(NOW()) = date(RJ.C_DATE)
+				AND G.IS_ENABLE = 1
+				AND J.IS_ENABLE = 1
+			)
+			GROUP BY
+				RJ.GROUP_ID
+			HAVING
+				ORDER_NO > ORDER_NO_LATEST_UPDATE
+	    ]]>
+	</select>
+	
+	<!-- 有组内依赖无作业依赖无排序待检查的小组 -->
+	<!-- 有组依赖无作业依赖无排序无运行中无当天失败作业有等待中作业的小组 -->
+	<select id="groupReferNoJobReferNoOrderSubGroupCandidateList" parameterType="com.meicloud.model.SubGroup" resultMap="subGroup">
+	    <![CDATA[
+			SELECT
+				RJ.GROUP_ID AS GROUP_ID,
+				MAX(RJ.ORDER_NO) AS ORDER_NO,
+				RG.ORDER_NO_LATEST_UPDATE AS ORDER_NO_LATEST_UPDATE
+			FROM
+				cm_run_group RG
+			JOIN cm_run_job RJ ON RG.GROUP_ID = RJ.GROUP_ID
+			WHERE
+				1 = 1
+			AND RJ.STATE = #{watingCheckState}
+			AND RG.IS_SORT_IN_GROUP = 0
+			AND RG.REFERED_GROUP_IDS IS NOT NULL
+			AND RG.REFERED_GROUP_IDS <> ''
+			AND (
+				RG.REFERED_JOB_IDS IS NULL
+				OR RG.REFERED_JOB_IDS = ''
+			)
+			AND RG.GROUP_ID NOT IN (
+				SELECT DISTINCT
+					GROUP_ID
+				FROM
+					cm_run_job
+				WHERE
+					STATE = #{runningState}
+			)
+			AND RG.GROUP_ID NOT IN (
+				SELECT DISTINCT
+					RJ.GROUP_ID
+				FROM
+					cm_run_job RJ
+				JOIN cm_group G ON RJ.GROUP_ID = G.GROUP_ID
+				JOIN cm_job J ON RJ.JOB_ID = J.JOB_ID
+				WHERE
+					RJ.STATE = #{errorState}
+				AND date(NOW()) = date(RJ.C_DATE)
+				AND G.IS_ENABLE = 1
+				AND J.IS_ENABLE = 1
+			)
+			GROUP BY
+				RJ.GROUP_ID
+			HAVING
+				ORDER_NO > ORDER_NO_LATEST_UPDATE
+	    ]]>
+	</select>
+	
+	<!-- 有组内依赖无作业依赖有排序待检查的小组 -->
+	<!-- 有组依赖无作业依赖有排序无运行中无当天失败作业有等待中作业的小组 -->
+	<select id="groupReferNoJobReferOrderSubGroupCandidateList" parameterType="com.meicloud.model.SubGroup" resultMap="subGroup">
+	    <![CDATA[
+			SELECT
+				RJ.GROUP_ID AS GROUP_ID,
+				MIN(RJ.ORDER_NO) AS ORDER_NO,
+				RG.ORDER_NO_LATEST_UPDATE AS ORDER_NO_LATEST_UPDATE
+			FROM
+				cm_run_group RG
+			JOIN cm_run_job RJ ON RG.GROUP_ID = RJ.GROUP_ID
+			WHERE
+				1 = 1
+			AND RJ.STATE = #{watingCheckState}
+			AND RG.IS_SORT_IN_GROUP = 1
+			AND RG.REFERED_GROUP_IDS IS NOT NULL
+			AND RG.REFERED_GROUP_IDS <> ''
+			AND (
+				RG.REFERED_JOB_IDS IS NULL
+				OR RG.REFERED_JOB_IDS = ''
+			)
+			AND RG.GROUP_ID NOT IN (
+				SELECT DISTINCT
+					GROUP_ID
+				FROM
+					cm_run_job
+				WHERE
+					STATE = #{runningState}
+			)
+			AND RG.GROUP_ID NOT IN (
+				SELECT DISTINCT
+					RJ.GROUP_ID
+				FROM
+					cm_run_job RJ
+				JOIN cm_group G ON RJ.GROUP_ID = G.GROUP_ID
+				JOIN cm_job J ON RJ.JOB_ID = J.JOB_ID
+				WHERE
+					RJ.STATE = #{errorState}
+				AND date(NOW()) = date(RJ.C_DATE)
+				AND G.IS_ENABLE = 1
+				AND J.IS_ENABLE = 1
+			)
+			GROUP BY
+				RJ.GROUP_ID
+			HAVING
+				ORDER_NO > ORDER_NO_LATEST_UPDATE
+	    ]]>
+	</select>
+	
+	<!-- 无组内依赖有作业依赖无排序待检查的小组 -->
+	<!-- 有作业依赖无组依赖无排序无运行中无当天失败作业有等待中的小组 -->
+	<select id="noGroupReferJobReferNoOrderSubGroupCandidateList" parameterType="com.meicloud.model.SubGroup" resultMap="subGroup">
+	    <![CDATA[
+			SELECT
+				RJ.GROUP_ID AS GROUP_ID,
+				MAX(RJ.ORDER_NO) AS ORDER_NO,
+				RG.ORDER_NO_LATEST_UPDATE AS ORDER_NO_LATEST_UPDATE
+			FROM
+				cm_run_group RG
+			JOIN cm_run_job RJ ON RG.RUN_GROUP_ID = RJ.RUN_GROUP_ID
+			WHERE
+				1 = 1
+			AND RJ.STATE = #{watingCheckState}
+			AND RG.IS_SORT_IN_GROUP = 0
+			AND (
+				RG.REFERED_GROUP_IDS IS NULL
+				OR RG.REFERED_GROUP_IDS = ''
+			)
+			AND RG.REFERED_JOB_IDS IS NOT NULL
+			AND RG.REFERED_JOB_IDS <> ''
+			AND RG.GROUP_ID NOT IN (
+				SELECT DISTINCT
+					GROUP_ID
+				FROM
+					cm_run_job
+				WHERE
+					STATE = #{runningState}
+			)
+			AND RG.GROUP_ID NOT IN (
+				SELECT DISTINCT
+					RJ.GROUP_ID
+				FROM
+					cm_run_job RJ
+				JOIN cm_group G ON RJ.GROUP_ID = G.GROUP_ID
+				JOIN cm_job J ON RJ.JOB_ID = J.JOB_ID
+				WHERE
+					RJ.STATE = #{errorState}
+				AND DATE(NOW()) = date(RJ.C_DATE)
+				AND G.IS_ENABLE = 1
+				AND J.IS_ENABLE = 1
+			)
+			GROUP BY
+				RJ.GROUP_ID
+			HAVING
+				ORDER_NO > ORDER_NO_LATEST_UPDATE
+	    ]]>
+	</select>
+	
+	<!-- 无组内依赖有作业依赖有排序待检查的小组 -->
+	<!-- 有作业依赖无组依赖有排序无运行中无当天失败作业有等待中的小组 -->
+	<select id="noGroupReferJobReferOrderSubGroupCandidateList" parameterType="com.meicloud.model.SubGroup" resultMap="subGroup">
+	    <![CDATA[
+			SELECT
+				RJ.GROUP_ID AS GROUP_ID,
+				MIN(RJ.ORDER_NO) AS ORDER_NO,
+				RG.ORDER_NO_LATEST_UPDATE AS ORDER_NO_LATEST_UPDATE
+			FROM
+				cm_run_group RG
+			JOIN cm_run_job RJ ON RG.RUN_GROUP_ID = RJ.RUN_GROUP_ID
+			WHERE
+				1 = 1
+			AND RJ.STATE = #{watingCheckState}
+			AND RG.IS_SORT_IN_GROUP = 1
+			AND (
+				RG.REFERED_GROUP_IDS IS NULL
+				OR RG.REFERED_GROUP_IDS = ''
+			)
+			AND RG.REFERED_JOB_IDS IS NOT NULL
+			AND RG.REFERED_JOB_IDS <> ''
+			AND RG.GROUP_ID NOT IN (
+				SELECT DISTINCT
+					GROUP_ID
+				FROM
+					cm_run_job
+				WHERE
+					STATE = #{runningState}
+			)
+			AND RG.GROUP_ID NOT IN (
+				SELECT DISTINCT
+					RJ.GROUP_ID
+				FROM
+					cm_run_job RJ
+				JOIN cm_group G ON RJ.GROUP_ID = G.GROUP_ID
+				JOIN cm_job J ON RJ.JOB_ID = J.JOB_ID
+				WHERE
+					RJ.STATE = #{errorState}
+				AND DATE(NOW()) = date(RJ.C_DATE)
+				AND G.IS_ENABLE = 1
+				AND J.IS_ENABLE = 1
+			)
+			GROUP BY
+				RJ.GROUP_ID
+			HAVING
+				ORDER_NO > ORDER_NO_LATEST_UPDATE
+	    ]]>
+	</select>
+	
+	<!-- 有组内依赖有作业依赖无排序待检查的小组 -->
+	<!-- 有组依赖有作业依赖无排序无运行中无当天失败作业有等待中的小组 -->
+	<select id="groupReferJobReferNoOrderSubGroupCandidateList" parameterType="com.meicloud.model.SubGroup" resultMap="subGroup">
+	    <![CDATA[
+			SELECT
+				RJ.GROUP_ID AS GROUP_ID,
+				MAX(RJ.ORDER_NO) AS ORDER_NO,
+				RG.ORDER_NO_LATEST_UPDATE AS ORDER_NO_LATEST_UPDATE
+			FROM
+				cm_run_group RG
+			JOIN cm_run_job RJ ON RG.RUN_GROUP_ID = RJ.RUN_GROUP_ID
+			WHERE
+				1 = 1
+			AND RJ.STATE = #{watingCheckState}
+			AND RG.IS_SORT_IN_GROUP = 0
+			AND RG.REFERED_GROUP_IDS IS NOT NULL
+			AND RG.REFERED_GROUP_IDS <> ''
+			AND RG.REFERED_JOB_IDS IS NOT NULL
+			AND RG.REFERED_JOB_IDS <> ''
+			AND RG.GROUP_ID NOT IN (
+				SELECT DISTINCT
+					GROUP_ID
+				FROM
+					cm_run_job
+				WHERE
+					STATE = #{runningState}
+			)
+			AND RG.GROUP_ID NOT IN (
+				SELECT DISTINCT
+					RJ.GROUP_ID
+				FROM
+					cm_run_job RJ
+				JOIN cm_group G ON RJ.GROUP_ID = G.GROUP_ID
+				JOIN cm_job J ON RJ.JOB_ID = J.JOB_ID
+				WHERE
+					RJ.STATE = #{errorState}
+				AND DATE(NOW()) = date(RJ.C_DATE)
+				AND G.IS_ENABLE = 1
+				AND J.IS_ENABLE = 1
+			)
+			GROUP BY
+				RJ.GROUP_ID
+			HAVING
+				ORDER_NO > ORDER_NO_LATEST_UPDATE
+	    ]]>
+	</select>
+	
+	<!-- 有组内依赖有作业依赖有排序待检查的小组 -->
+	<!-- 有组依赖有作业依赖有排序无运行中无当天失败作业有等待中的小组 -->
+	<select id="groupReferJobReferOrderSubGroupCandidateList" parameterType="com.meicloud.model.SubGroup" resultMap="subGroup">
+	    <![CDATA[
+			SELECT
+				RJ.GROUP_ID AS GROUP_ID,
+				MIN(RJ.ORDER_NO) AS ORDER_NO,
+				RG.ORDER_NO_LATEST_UPDATE AS ORDER_NO_LATEST_UPDATE
+			FROM
+				cm_run_group RG
+			JOIN cm_run_job RJ ON RG.RUN_GROUP_ID = RJ.RUN_GROUP_ID
+			WHERE
+				1 = 1
+			AND RJ.STATE = #{watingCheckState}
+			AND RG.IS_SORT_IN_GROUP = 1
+			AND RG.REFERED_GROUP_IDS IS NOT NULL
+			AND RG.REFERED_GROUP_IDS <> ''
+			AND RG.REFERED_JOB_IDS IS NOT NULL
+			AND RG.REFERED_JOB_IDS <> ''
+			AND RG.GROUP_ID NOT IN (
+				SELECT DISTINCT
+					GROUP_ID
+				FROM
+					cm_run_job
+				WHERE
+					STATE = #{runningState}
+			)
+			AND RG.GROUP_ID NOT IN (
+				SELECT DISTINCT
+					RJ.GROUP_ID
+				FROM
+					cm_run_job RJ
+				JOIN cm_group G ON RJ.GROUP_ID = G.GROUP_ID
+				JOIN cm_job J ON RJ.JOB_ID = J.JOB_ID
+				WHERE
+					RJ.STATE = #{errorState}
+				AND DATE(NOW()) = date(RJ.C_DATE)
+				AND G.IS_ENABLE = 1
+				AND J.IS_ENABLE = 1
+			)
+			GROUP BY
+				RJ.GROUP_ID
+			HAVING
+				ORDER_NO > ORDER_NO_LATEST_UPDATE
+	    ]]>
+	</select>
+	
+	 <!-- 已推送至运行时表的作业  -->
+	 <select id="prevActiveJobCount" parameterType="int" resultType="int">
+	   <![CDATA[
+	    SELECT
+			COUNT(DISTINCT J.JOB_ID)
+		FROM
+			cm_job J
+		JOIN cm_group G ON J.GROUP_ID = G.GROUP_ID
+		WHERE
+			J.IS_ENABLE = 1
+		AND J.IS_ONLINE = 1
+		AND G.IS_ENABLE = 1
+		AND UNIX_TIMESTAMP(J.C_DATE) <= (
+			SELECT
+				UNIX_TIMESTAMP(C_DATE)
+			FROM
+				cm_run_group
+			WHERE
+				GROUP_ID = #{groupId} limit 1
+		)
+		AND INSTR(
+			(
+				SELECT
+					CONCAT(',', REFERED_GROUP_IDS, ',')
+				FROM
+					CM_RUN_GROUP
+				WHERE
+					GROUP_ID = #{groupId}  limit 1
+			),
+			CONCAT(',', J.GROUP_ID, ',')
+		)
+	   ]]>
+	</select>
+	
+	
+	<select id="succssOrCancelJobCount" parameterType="com.meicloud.model.QueryParam" resultType="int">
+	  <![CDATA[
+	    SELECT
+			COUNT(DISTINCT JS.JOB_ID)
+		FROM
+			cm_job_state JS
+		JOIN cm_job J ON JS.JOB_ID = J.JOB_ID
+		JOIN cm_group G ON JS.GROUP_ID = G.GROUP_ID
+		WHERE
+			JS.STATE IN (#{cancelState}, #{successState})
+		AND J.IS_ENABLE = 1
+		AND J.IS_ONLINE = 1
+		AND G.IS_ENABLE = 1
+		AND INSTR(
+			(
+				SELECT
+					CONCAT(',', REFERED_GROUP_IDS,',')
+				FROM
+					CM_RUN_GROUP
+				WHERE
+					GROUP_ID = #{groupId}  limit 1
+			),
+			CONCAT(',', JS.GROUP_ID, ',')
+		)
+	  ]]>
+	</select>
+	
+	<!-- 更新前置依赖检查通过的小组状态为等待执行 -->
+	<update id="updateReferPassSubGroup" parameterType="com.meicloud.model.SubGroup">
+	   <![CDATA[
+	   UPDATE cm_run_job
+			SET STATE = #{watingState},
+			U_DATE=NOW()
+			WHERE
+				GROUP_ID = #{groupId}
+			AND ORDER_NO <= #{orderNo}
+			AND STATE = #{watingCheckState}
+	   ]]>
+	</update>
+	
+	<!-- 更新前置依赖检查通过的小组状态为等待执行 -->
+	<update id="updateLatestOrderNo" parameterType="com.meicloud.model.SubGroup">
+	   <![CDATA[
+	      UPDATE cm_run_group SET ORDER_NO_LATEST_UPDATE = #{orderNo} WHERE GROUP_ID = #{groupId}
+	   ]]>
+	</update>
+	
+</mapper> 

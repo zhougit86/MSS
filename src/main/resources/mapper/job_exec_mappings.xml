@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.meicloud.dao.JobExecStatusMapper">
+
+	<resultMap type="com.meicloud.model.JobsStatByGroup" id="groupStat">
+		<result property="groupId" column="GROUP_ID" jdbcType="INTEGER" javaType="java.lang.Integer"/>
+		<result property="state" column="STATE" jdbcType="INTEGER" javaType="java.lang.Integer"/>
+		<result property="jobCount" column="JOB_COUNT" jdbcType="INTEGER" javaType="java.lang.Integer"/>
+		<result property="jobId" column="JOB_ID" jdbcType="INTEGER" javaType="java.lang.Integer"/>
+	</resultMap>
+	  
+	<select id="getJobCountOfEachStateByGroup4Today" parameterType="java.lang.String" resultMap="groupStat">
+		SELECT
+			T.GROUP_ID AS GROUP_ID,
+			T.STATE AS STATE,
+			count(T.JOB_ID) AS JOB_COUNT
+		FROM
+			(
+				SELECT
+					JS.GROUP_ID,
+					JS.JOB_ID,
+					CASE
+				WHEN (
+					J.IS_ENABLE = 1
+					AND J.IS_ONLINE = 1
+					AND G.IS_ENABLE = 1
+				) THEN
+					JS.STATE
+				ELSE
+					- 1
+				END AS STATE
+				FROM
+					cm_job_state JS
+				JOIN cm_job J ON JS.JOB_ID = J.JOB_ID
+				JOIN cm_group G ON JS.GROUP_ID = G.GROUP_ID
+				where 
+					1=1
+					AND JS.GROUP_ID IN 
+					<foreach collection="array" item="item" index="index" open="(" separator="," close=")">
+						#{item}							
+					</foreach> 
+			) T
+		GROUP BY
+			T.GROUP_ID,
+			T.STATE
+		ORDER BY
+			T.GROUP_ID ASC,
+			T.STATE ASC
+	</select>
+	
+	<!-- 获取历史组跑数状态-->
+	<select id="getStatOfLatestRoundHis" parameterType="java.lang.String" resultMap="groupStat">
+		  SELECT
+				T.GROUP_ID AS GROUP_ID,
+				COUNT(DISTINCT T.JOB_ID) JOB_COUNT,
+				T.STATE AS STATE
+			FROM
+				(
+					(
+						SELECT
+								RJ.RUN_GROUP_ID AS GROUP_ID,
+								RJ.JOB_ID AS JOB_ID,
+								RJ.STATE AS STATE
+							FROM
+								CM_RUN_JOB RJ
+							WHERE
+								RJ.RUN_GROUP_ID IN 
+								<foreach collection="array" item="item" index="index" open="(" separator="," close=")">
+									#{item}							
+								</foreach>
+					)
+					UNION ALL
+						(
+							SELECT
+								RJH.RUN_GROUP_ID AS GROUP_ID,
+								RJH.JOB_ID AS JOB_ID,
+								RJH.STATE AS STATE
+							FROM
+								CM_RUN_JOB_HIS RJH
+							WHERE
+								RJH.RUN_GROUP_ID IN 
+								<foreach collection="array" item="item" index="index" open="(" separator="," close=")">
+									#{item}							
+								</foreach>
+						)
+				) T
+			GROUP BY
+				T.GROUP_ID,
+				T.STATE
+			ORDER BY
+				T.GROUP_ID ASC
+	</select>
+	
+	<select id="getRunServers" resultType="java.lang.Integer">
+	  select count(ID) from cm_server WHERE STATE=0 AND (TYPE = 'ES' or TYPE = 'COMPREHENSIVE')
+	  <if test="_parameter != null">
+		AND QUEUE_ID =#{queueId}
+	  </if>
+	</select>
+	
+	<!-- 当天已执行的job数 -->
+	<select id="getJobStateCount"  resultMap="groupStat">
+	  <![CDATA[
+	  		SELECT
+				COUNT(DISTINCT JOB_ID) AS JOB_COUNT,
+				STATE AS STATE
+			FROM
+				(
+					SELECT
+						JOB_ID,
+						STATE
+					FROM
+						cm_run_job
+					WHERE
+						DATE_FORMAT(NOW(), '%Y%m%d') = DATE_FORMAT(C_DATE, '%Y%m%d')
+					UNION ALL
+						SELECT
+							job_id,
+							- 1 AS STATE
+						FROM
+							cm_job
+						WHERE
+							JOB_ID NOT IN (
+								SELECT
+									JOB_ID
+								FROM
+									cm_run_job
+								WHERE
+									DATE_FORMAT(NOW(), '%Y%m%d') = DATE_FORMAT(C_DATE, '%Y%m%d')
+							)
+				) T
+			GROUP BY
+				state
+	  ]]>
+	</select>
+	
+</mapper>

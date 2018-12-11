@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.meicloud.dao.RolePermMapper">
+
+	<resultMap id="baseSql" type="com.meicloud.model.RolePerm">
+		<result property="roleId" column="ROLE_ID"/>
+		<result property="permId" column="PERM_ID"/>
+		<result property="permPath" column="PERM_PATH"/>
+	</resultMap>
+
+
+	<resultMap id="groupSql" type="com.meicloud.dto.PermInfo">
+		<result property="id" column="PERM_ID" />
+		<result property="pId" column="PERM_PARENT_ID"/>
+		<result property="permCode" column="PERM_CODE"/>
+		<result property="permName" column="PERM_NAME" />
+		<result property="permPath" column="PERM_PATH"/>
+		<result property="ifFlag" column="if_flag" />
+	</resultMap>
+
+
+
+	<select id="findList" resultMap="baseSql" parameterType="com.meicloud.model.RolePerm">
+	    SELECT
+			R.ROLE_ID,
+			R.PERM_ID,
+			P.PERM_PATH
+		FROM
+			CM_ROLE_PERM R
+		LEFT JOIN
+			CM_PERM_V P
+		ON R.PERM_ID = P.PERM_ID
+			WHERE 1=1
+			<if test="roleId!=null">
+				AND ROLE_ID = #{roleId}
+			</if>
+			<if test="permId!=null">
+				AND PERM_ID = #{permId}
+			</if>
+	</select>
+
+	<select id="findGroupList" resultMap="groupSql" parameterType="java.lang.String">
+		<![CDATA[
+	    SELECT
+	    	c.PERM_ID,
+	    	c.PERM_PARENT_ID,
+			c.PERM_CODE  ,
+			c.PERM_NAME,
+			c.PERM_PATH,
+			(CASE when c.PERM_ID in(select DISTINCT PERM_ID  from  cm_role_perm WHERE role_id=#{roleId}) THEN 1 ELSE 0 END) AS if_flag
+		FROM
+			 cm_perm_v  c
+	  ]]>
+	</select>
+
+
+	<insert id="addRolePerm" parameterType="com.meicloud.model.RolePerm">
+		insert into `CM_ROLE_PERM` ( `ROLE_ID`, `PERM_ID`) values (#{roleId}, #{permId})
+	</insert>
+
+	<delete id="delRolePerm" >
+		delete from `CM_ROLE_PERM` where `ROLE_ID`=#{roleId}
+	</delete>
+
+
+</mapper>

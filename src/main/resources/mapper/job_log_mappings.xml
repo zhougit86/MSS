@@ -1,0 +1,202 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.meicloud.dao.JobLogMapper">
+
+	<resultMap id="jobLog" type="com.meicloud.model.JobLog">
+		<result property="logId" column="LOG_ID" jdbcType="INTEGER" javaType="java.lang.Integer"/>
+		<result property="jobId" column="JOB_ID" jdbcType="INTEGER" javaType="java.lang.Integer"/>
+		<result property="execState" column="STATE" jdbcType="VARCHAR" javaType="java.lang.String"/>
+		<result property="state" column="STATE" jdbcType="INTEGER" javaType="java.lang.Integer"/>
+		<result property="consoleFile" column="CONSOLE_FILE" jdbcType="VARCHAR" javaType="java.lang.String"/>
+		<result property="ipAddress" column="IP_ADDRESS" jdbcType="VARCHAR" javaType="java.lang.String"/>
+		<result property="startDate" column="START_DATE" jdbcType="TIMESTAMP" javaType="java.util.Date"/>
+		<result property="endDate" column="END_DATE" jdbcType="TIMESTAMP" javaType="java.util.Date"/>
+		<result property="groupName" column="G_NAME" jdbcType="VARCHAR" javaType="java.lang.String"/>
+		<result property="jobName" column="JOB_NAME" jdbcType="VARCHAR" javaType="java.lang.String"/>
+		<result property="execTime" column="EXECTIME" jdbcType="INTEGER" javaType="java.lang.Integer"/>
+		<result property="executeServerId" column="EXECUTE_SERVER_ID" jdbcType="VARCHAR" javaType="java.lang.Integer"/>
+	</resultMap>
+	
+
+	<insert id="addLogAfterKill" parameterType="com.meicloud.model.KillJobParam">
+		INSERT cm_job_log (
+			JOB_ID,
+			RUN_JOB_ID,
+			STATE,
+			MSG,
+			EXECUTE_SERVER_ID,
+			CONSOLE_FILE,
+			C_DATE,
+			CMD,
+			RUN_VERSION
+		) SELECT
+			JOB_ID,
+			RUN_JOB_ID,
+			#{state},
+			#{msg},
+			EXECUTE_SERVER_ID,
+			CONSOLE_FILE,
+			NOW(),
+			CMD,
+			RUN_VERSION
+		FROM
+			cm_job_log
+		WHERE
+			RUN_JOB_ID = #{runJobId}
+		ORDER BY
+			LOG_ID DESC
+		LIMIT 1
+	</insert>
+	
+	<select id="getLatestLog" parameterType="com.meicloud.model.KillJobParam" resultMap="jobLog">
+		SELECT
+			LOG_ID,
+			JOB_ID,
+			RUN_JOB_ID,
+			STATE,
+			MSG,
+			EXECUTE_SERVER_ID,
+			CONSOLE_FILE,
+			C_DATE,
+			CMD,
+			RUN_VERSION
+		FROM
+			cm_job_log
+		WHERE
+			RUN_JOB_ID = #{runJobId}
+		AND RUN_VERSION = #{runVersion}
+		ORDER BY C_DATE DESC 
+		LIMIT 1
+	</select>
+
+
+
+	<insert id="add" parameterType="com.meicloud.model.JobLog" keyProperty="logId">
+		<selectKey resultType="int" keyProperty="logId" order="AFTER" >
+	      SELECT LAST_INSERT_ID() AS logId
+	   </selectKey>
+	   INSERT INTO CM_JOB_LOG (
+			JOB_ID,
+			RUN_JOB_ID,
+			RUN_VERSION,
+			STATE,
+			MSG,
+			EXECUTE_SERVER_ID,
+			CONSOLE_FILE,
+			C_DATE,
+			CMD
+		)
+		VALUES
+			(
+				#{jobId},
+				#{runJobId},
+				#{runVersion},
+				#{state},
+				#{msg},
+				#{executeServerId},
+				#{consoleFile},
+				NOW(),
+				#{cmd}
+		) 
+	</insert>
+
+
+	<delete id="deleteByJobId" parameterType="int">
+		delete from CM_JOB_LOG where JOB_ID=#{jobId}
+	</delete>
+
+	<delete id="deleteGroupId" parameterType="int">
+		delete from CM_JOB_LOG where JOB_ID in (select JOB_ID from CM_JOB J where J.GROUP_ID=#{groupId})
+	</delete>
+
+	<select id="getListByJobId" parameterType="int" resultMap="jobLog">
+		 SELECT
+			J.JOB_NAME AS JOB_NAME,
+			J.JOB_ID AS JOB_ID,
+			G.G_NAME AS G_NAME,
+			SUBSTRING_INDEX(JL.CONSOLE_FILE, '/' ,- 1) AS CONSOLE_FILE,
+			S.IP AS IP_ADDRESS,
+			MAX(JL.LOG_ID) AS LOG_ID,
+			MIN(JL.C_DATE) AS START_DATE,
+			CASE
+		WHEN MAX(JL.C_DATE) = MIN(JL.C_DATE) THEN
+			NULL
+		ELSE
+			MAX(JL.C_DATE)
+		END AS END_DATE,
+		 MAX(JL.STATE) AS STATE,
+		 TIMESTAMPDIFF(
+			SECOND,
+			MIN(JL.C_DATE),
+			MAX(JL.C_DATE)
+		) AS EXECTIME
+		FROM
+			cm_job_log JL
+		JOIN cm_job J ON JL.JOB_ID = J.JOB_ID
+		JOIN cm_group G ON J.GROUP_ID = G.GROUP_ID
+		JOIN cm_server S ON S.ID = JL.EXECUTE_SERVER_ID
+		WHERE
+			JL.JOB_ID = #{jobId}
+		GROUP BY
+			JL.RUN_JOB_ID,
+			JL.CONSOLE_FILE
+		ORDER BY
+			START_DATE DESC
+	</select>
+
+	<select id="getLogById" parameterType="int" resultMap="jobLog">
+		<![CDATA[
+		 SELECT
+			L.LOG_ID,
+			L.JOB_ID,
+			MAX(L.STATE) AS STATE,
+			MIN(L.C_DATE) AS START_DATE,
+			MAX(L.C_DATE) AS END_DATE,
+			L.CONSOLE_FILE,
+			L.EXECUTE_SERVER_ID
+		FROM
+			CM_JOB_LOG L
+		LEFT JOIN CM_JOB J ON J.JOB_ID = L.JOB_ID
+		LEFT JOIN CM_GROUP G ON G.GROUP_ID = J.GROUP_ID
+		WHERE
+			CONSOLE_FILE IN (
+				SELECT
+					CONSOLE_FILE
+				FROM
+					cm_job_log
+				WHERE
+					LOG_ID = #{logId}
+			)
+		GROUP BY
+			CONSOLE_FILE
+	 ]]>
+	</select>
+
+	<update id="updateLog2ErrorFromWaitingOrRunning" parameterType="com.meicloud.model.JobPusherParam">
+		<![CDATA[
+	        UPDATE cm_job_log
+			SET STATE = #{errorState},
+			MSG=#{msg}
+			WHERE
+			RUN_JOB_ID = #{runJobId}
+			AND	(STATE = #{runningState} OR STATE=#{watingState} OR STATE=#{watingCheckState})
+			ORDER BY
+				LOG_ID DESC
+			LIMIT 1
+	   ]]>
+	</update>
+
+	<update id="updateLog2ErrorFromWaitingOrRunningByGroup" parameterType="com.meicloud.model.JobPusherParam">
+		<![CDATA[
+	        UPDATE cm_job_log
+			SET STATE = #{errorState},
+			MSG=#{msg}
+			WHERE
+			 (STATE = #{runningState} OR STATE=#{watingState} OR STATE=#{watingCheckState})
+			AND JOB_ID IN(
+			   select JOB_ID from cm_run_job where GROUP_ID=#{groupId}
+			)
+	   ]]>
+	</update>
+	
+</mapper>

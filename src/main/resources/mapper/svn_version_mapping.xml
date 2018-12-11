@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.meicloud.dao.SvnVersionMapper">
+
+	<resultMap type="com.meicloud.model.SvnVersion" id="svnVersion">
+	   <result property="id" column="id" jdbcType="INTEGER" javaType="int"/>
+	   <result property="ipNum" column="ip_num" jdbcType="CHAR" javaType="java.lang.String"/>
+	   <result property="version" column="version" jdbcType="VARCHAR" javaType="java.lang.Long"/>
+	   <result property="lastUpdate" column="last_update" jdbcType="TIMESTAMP" javaType="java.util.Date"/> 
+    </resultMap>
+      
+    
+    <insert id="add"
+		parameterType="com.meicloud.model.SvnVersion"
+		useGeneratedKeys="true" keyProperty="id">
+		
+		insert into cm_svn_version(ip_num,version,last_update) values (#{ipNum},#{version},now())
+		
+	</insert>
+	
+
+	<update id="update"
+		parameterType="com.meicloud.model.SvnVersion">
+		
+		update cm_svn_version csv set csv.version=#{version},csv.last_update=now() where csv.id=#{id}
+		
+	</update>
+	
+	<select id="getByIpNum" resultMap="svnVersion" parameterType="java.lang.String">
+		select id,ip_num,version from cm_svn_version csv where csv.ip_num = #{ipNum}
+	</select>
+    
+    
+	
+</mapper>

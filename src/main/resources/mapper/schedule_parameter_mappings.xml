@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.meicloud.dao.ScheduleParameterMapper">
+
+	<resultMap id="scheduleParameter" type="com.meicloud.model.ScheduleParameter">
+	  <result column="SCHEDULE_PARA_ID" property="scheduleParaId" />
+		<result column="PARAMETER_NAME" property="parameterName" />
+		<result column="PARAMETER_SORT" property="parameterSort" />
+		<result column="SUBJECT_NAME" property="subjectName" />
+		<result column="MAPPING_NAME" property="mappingName" />
+		<result column="SESSION_NAME" property="sessionName" />
+		<result column="WORKFLOW_NAME" property="workflowName" />
+		<result column="PARAMETER_VALUE" property="parameterValue" />
+		<result column="FORMAT_MASK" property="formatMask" />
+		<result column="PARA_OFFSET" property="paraOffset" />
+		<result column="FREQUENCY" property="frequency" />
+		<result column="ENABLE_FLAG" property="enableFlag" />
+		<result column="START_DATE_ACTIVE" property="startDateActive" />
+		<result column="END_DATE_ACTIVE" property="endDateActive" />
+		<result column="CREATION_DATE" property="creationDate" />
+		<result column="CREATED_BY" property="createdBy" />
+		<result column="LAST_UPDATED_BY" property="lastUpdatedBy" />
+		<result column="LAST_UPDATE_DATE" property="lastUpdateDate" />
+		<result column="LAST_UPDATE_LOGIN" property="lastUpdateLogin" />
+		<result column="PARAMETER_DESC" property="parameterDesc" />
+		<result column="PARAMETER_VALUE_INI" property="parameterValueIni" />
+	</resultMap>
+	
+	<select id="queryParameter" parameterType="string" resultMap="scheduleParameter">
+	  <![CDATA[
+	    select * 
+		from apd_fnd_schedule_parameter 
+		WHERE
+			WORKFLOW_NAME = #{workflowName}
+		ORDER BY PARAMETER_SORT ASC
+	  ]]>
+	</select>
+	
+	<update id="updateParameter" parameterType="com.meicloud.model.ScheduleParameter">
+		<![CDATA[
+		UPDATE apd_fnd_schedule_parameter
+		SET 
+		 	 MAPPING_NAME = #{mappingName}
+			,SESSION_NAME = #{sessionName}
+			,WORKFLOW_NAME = #{workflowName}
+			,PARAMETER_VALUE = #{parameterValue}
+			,PARAMETER_NAME = #{parameterName}
+			,FORMAT_MASK = #{formatMask}
+			,FREQUENCY = #{frequency}
+		WHERE
+			SCHEDULE_PARA_ID = #{scheduleParaId}
+		]]>
+	</update>
+	
+	<insert id="insertParameter"
+		parameterType="com.meicloud.model.ScheduleParameter"
+		useGeneratedKeys="true" keyProperty="scheduleParaId">
+		insert into apd_fnd_schedule_parameter(SCHEDULE_PARA_ID,PARAMETER_NAME,PARAMETER_SORT,SUBJECT_NAME,MAPPING_NAME,SESSION_NAME,WORKFLOW_NAME,PARAMETER_VALUE,FORMAT_MASK,PARA_OFFSET,FREQUENCY,ENABLE_FLAG,START_DATE_ACTIVE,END_DATE_ACTIVE,CREATION_DATE,CREATED_BY,LAST_UPDATED_BY,LAST_UPDATE_DATE,LAST_UPDATE_LOGIN,PARAMETER_DESC,PARAMETER_VALUE_INI)
+		 values(#{scheduleParaId},#{parameterName},#{parameterSort},#{subjectName},#{mappingName},#{sessionName},#{workflowName},#{parameterValue},#{formatMask},#{paraOffset},#{frequency},#{enableFlag},#{startDateActive},#{endDateActive},#{creationDate},#{createdBy},#{lastUpdatedBy},#{lastUpdateDate},#{lastUpdateLogin},#{parameterDesc},#{parameterValueIni})
+	</insert>
+	
+	<delete id="deleteParameter" parameterType="int">
+		delete from apd_fnd_schedule_parameter WHERE SCHEDULE_PARA_ID = #{scheduleParaId}
+	</delete>
+	
+</mapper>

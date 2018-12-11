@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.meicloud.dao.RoleUserMapper">
+
+	<resultMap id="baseSql" type="com.meicloud.model.RoleUser">
+		<result property="roleId" column="ROLE_ID" />
+		<result property="userNo" column="USER_NO" />
+		<result property="userName" column="REAL_NAME" />
+	</resultMap>
+
+
+	<resultMap id="groupSql" type="com.meicloud.dto.UserInfo">
+		<result property="userNo" column="ACCOUNT"/>
+		<result property="userName" column="REAL_NAME" />
+		<result property="ifFlag" column="if_flag"/>
+	</resultMap>
+
+
+
+	<select id="findList" resultMap="baseSql">
+	    SELECT
+			R.ROLE_ID,
+			R.USER_NO,
+			A.REAL_NAME
+		FROM
+			CM_ROLE_USER R
+		LEFT JOIN  CM_ACCOUNT A ON R.USER_NO=A.ACCOUNT
+			WHERE 1=1
+			<if test="roleId!=null">
+				AND R.ROLE_ID = #{roleId}
+			</if>
+	</select>
+
+	<select id="findOne" resultMap="baseSql">
+		<![CDATA[
+	    SELECT
+			R.ROLE_ID,
+			R.USER_NO,
+			A.REAL_NAME
+		FROM
+			CM_ROLE_USER R
+			LEFT JOIN  CM_ACCOUNT A ON R.USER_NO=A.ACCOUNT
+	  ]]>
+	</select>
+
+	<select id="findGroupList" resultMap="groupSql" parameterType="java.lang.String">
+		<![CDATA[
+	    SELECT
+			c.ACCOUNT  ,
+			c.REAL_NAME,
+			(CASE when c.ACCOUNT in(select DISTINCT ACCOUNT  from  cm_role_user WHERE role_id=#{roleId}) THEN 1 ELSE 0 END) AS if_flag
+		FROM
+			 cm_account  c
+	  ]]>
+	</select>
+
+
+	<insert id="addRoleUser" parameterType="com.meicloud.model.RoleUser">
+		insert into `CM_ROLE_USER` ( `ROLE_ID`, `USER_NO`) values (#{roleId}, #{userNo})
+	</insert>
+
+	<delete id="delRoleUser" >
+		delete from `CM_ROLE_USER` where `ROLE_ID`=#{roleId}
+	</delete>
+
+
+</mapper>

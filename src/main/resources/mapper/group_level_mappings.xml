@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.meicloud.dao.GroupLevelMapper">
+
+	<resultMap id="groupLevel" type="com.meicloud.model.GroupLevel">
+	  <result property="levelId" column="LEVEL_ID" jdbcType="INTEGER" javaType="java.lang.Integer"/>
+	  <result property="levelOrderNo" column="LEVEL_ORDER_NO" jdbcType="INTEGER" javaType="java.lang.Integer"/>
+	  <result property="levelName" column="LEVEL_NAME" jdbcType="VARCHAR" javaType="java.lang.String"/>
+	  <result property="queueId" column="QUEUE_ID" jdbcType="VARCHAR" javaType="java.lang.String"/>
+	</resultMap>
+	
+	<select id="getList" resultMap="groupLevel">
+	  <![CDATA[
+	     select 
+		     L.LEVEL_ID,
+		     L.LEVEL_ORDER_NO,
+		     L.LEVEL_NAME,
+		     L.QUEUE_ID,
+		     Q.QUEUE_NAME
+	     from 
+	     	CM_GROUP_LEVEL L
+	     	LEFT JOIN CM_QUEUE Q ON L.QUEUE_ID=Q.QUEUE_ID
+	     order by L.LEVEL_ORDER_NO ASC
+	  ]]>
+	</select>
+
+
+	<select id="getGroupLevelListByQueueId" resultMap="groupLevel" parameterType="java.lang.String">
+	     select
+		     L.LEVEL_ID,
+		     L.LEVEL_ORDER_NO,
+		     L.LEVEL_NAME,
+		     L.QUEUE_ID,
+		     Q.QUEUE_NAME
+	     from
+	     	CM_GROUP_LEVEL L
+	     	LEFT JOIN CM_QUEUE Q ON L.QUEUE_ID=Q.QUEUE_ID
+	     	where  L.QUEUE_ID = #{queueId}
+	     order by L.LEVEL_ORDER_NO ASC
+	</select>
+
+	<select id="getLevelNot0ByQueueIds" resultMap="groupLevel"  parameterType="java.util.List">
+		select
+		L.LEVEL_ID,
+		L.LEVEL_ORDER_NO,
+		L.LEVEL_NAME,
+		L.QUEUE_ID,
+		Q.QUEUE_NAME
+		from
+		CM_GROUP_LEVEL L
+		LEFT JOIN CM_QUEUE Q ON L.QUEUE_ID=Q.QUEUE_ID
+		WHERE 1=1
+		<if test="list!=null">
+			and L.QUEUE_ID IN
+			<foreach item="item" index="index" collection="list" open="("  separator="," close=")">
+				#{item}
+			</foreach>
+		</if>
+	</select>
+	
+	<select id="getLevelNot0" resultMap="groupLevel">
+	  <![CDATA[
+	     select 
+		     L.LEVEL_ID,
+		     L.LEVEL_ORDER_NO,
+		     L.LEVEL_NAME,
+		     L.QUEUE_ID,
+		     Q.QUEUE_NAME
+	     from 
+	     	CM_GROUP_LEVEL L
+	     	LEFT JOIN CM_QUEUE Q ON L.QUEUE_ID=Q.QUEUE_ID
+	     where 
+	        L.LEVEL_ORDER_NO > 0
+	     order by L.LEVEL_ORDER_NO ASC
+	  ]]>
+	</select>
+	
+	<select id="getLevelByLevelName" resultMap="groupLevel" parameterType="java.lang.String">
+	  <![CDATA[
+	     select 
+		     L.LEVEL_ID,
+		     L.LEVEL_ORDER_NO,
+		     L.LEVEL_NAME,
+		     L.QUEUE_ID,
+		     Q.QUEUE_NAME
+	     from 
+	     	CM_GROUP_LEVEL L
+	     	LEFT JOIN CM_QUEUE Q ON L.QUEUE_ID=Q.QUEUE_ID
+	     where 
+	        L.LEVEL_NAME = #{levelName}
+	  ]]>
+	</select>
+	
+	<select id="getLevelById" resultMap="groupLevel" parameterType="java.lang.Integer">
+	  <![CDATA[
+	     select 
+		     L.LEVEL_ID,
+		     L.LEVEL_ORDER_NO,
+		     L.LEVEL_NAME,
+		     L.QUEUE_ID,
+		     Q.QUEUE_NAME
+	     from 
+	     	CM_GROUP_LEVEL L
+	     	LEFT JOIN CM_QUEUE Q ON L.QUEUE_ID=Q.QUEUE_ID
+	     where 
+	        L.LEVEL_ID = #{levelId}
+	  ]]>
+	</select>
+	
+	<!-- add by jianglm1 -->
+	<insert id="insert" parameterType="com.meicloud.model.GroupLevel">
+	   <![CDATA[
+	      INSERT INTO CM_GROUP_LEVEL (
+				      	LEVEL_ID,
+						LEVEL_ORDER_NO,
+						LEVEL_NAME,
+						QUEUE_ID
+	      ) values (#{levelId,jdbcType=BIGINT},
+	      #{levelOrderNo,jdbcType=BIGINT},
+	      #{levelName,jdbcType=VARCHAR},
+	      #{queueId,jdbcType=VARCHAR})
+					
+	   ]]>
+	</insert>
+	
+	<!-- add by jianglm1 -->
+	<update id="update" parameterType="com.meicloud.model.GroupLevel">
+	   <![CDATA[
+	     update 
+	     	CM_GROUP_LEVEL
+	     set 
+			LEVEL_ORDER_NO = #{levelOrderNo},                        
+			LEVEL_NAME = #{levelName},
+			QUEUE_ID = #{queueId}
+		where
+		    LEVEL_ID = #{levelId}
+	   ]]>
+	</update>
+	
+	<!-- add by jianglm1 -->
+	<update id="delete" parameterType="java.lang.Integer">
+	   <![CDATA[
+	     delete from  
+	     	CM_GROUP_LEVEL
+		where
+		    LEVEL_ID = #{levelId}
+	   ]]>
+	</update>
+	
+	<!-- add by jianglm1 -->
+	<select id="checkLevelNameExists" parameterType="com.meicloud.model.GroupLevel" resultType="int">
+	  <![CDATA[
+	     select 
+		    count(1)
+	     from 
+	     	CM_GROUP_LEVEL
+	     where 
+	       LEVEL_NAME = #{levelName} and QUEUE_ID = #{queueId}
+	  ]]>
+	</select>
+	
+	<select id="selectByTopicId" parameterType="java.lang.Integer" resultMap="groupLevel">
+		SELECT
+			t.LEVEL_ID,t.LEVEL_ORDER_NO,t.LEVEL_NAME,t.QUEUE_ID
+		FROM
+			CM_GROUP_LEVEL t
+		WHERE
+			t.LEVEL_ID in (
+			SELECT DISTINCT LEVEL_ID FROM cm_group WHERE TOPIC_ID=#{topicId}
+		)
+	</select>
+	
+</mapper>

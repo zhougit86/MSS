@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.meicloud.dao.QueueMapper">
+
+	<resultMap id="baseSql" type="com.meicloud.model.Queue">
+		<result property="queueId" column="QUEUE_ID" />
+		<result property="queueCode" column="QUEUE_CODE" />
+		<result property="queueName" column="QUEUE_NAME" />
+		<result property="svnUrl" column="SVN_URL" />
+		<result property="svnUserName" column="SVN_USERNAME" />
+		<result property="svnPassWord" column="SVN_PASSWORD" />
+		<result property="gitUrl" column="GIT_URL" />
+		<result property="gitUserName" column="GIT_USERNAME" />
+		<result property="gitPassWord" column="GIT_PASSWORD" />
+	</resultMap>
+
+
+	<select id="findList" resultMap="baseSql">
+		<![CDATA[
+	    SELECT
+			Q.QUEUE_ID,
+			Q.QUEUE_CODE,
+			Q.QUEUE_NAME,
+			Q.SVN_URL,
+			Q.SVN_USERNAME,
+			Q.SVN_PASSWORD,
+			Q.GIT_URL,
+			Q.GIT_USERNAME,
+			Q.GIT_PASSWORD
+		FROM
+			CM_QUEUE Q
+	  ]]>
+	</select>
+
+	<select id="findOne" resultMap="baseSql" parameterType="java.lang.String">
+		<![CDATA[
+	    SELECT
+			Q.QUEUE_ID,
+			Q.QUEUE_CODE,
+			Q.QUEUE_NAME,
+			Q.SVN_URL,
+			Q.SVN_USERNAME,
+			Q.SVN_PASSWORD,
+			Q.GIT_URL,
+			Q.GIT_USERNAME,
+			Q.GIT_PASSWORD
+		FROM
+			CM_QUEUE Q
+			WHERE  Q.QUEUE_ID = #{queueId}
+	  ]]>
+	</select>
+	
+	<select id="findByQueueCode" resultMap="baseSql" parameterType="java.lang.String">
+		<![CDATA[
+	    SELECT
+			Q.QUEUE_ID,
+			Q.QUEUE_CODE,
+			Q.QUEUE_NAME,
+			Q.SVN_URL,
+			Q.SVN_USERNAME,
+			Q.SVN_PASSWORD,
+			Q.GIT_URL,
+			Q.GIT_USERNAME,
+			Q.GIT_PASSWORD
+		FROM
+			CM_QUEUE Q
+			WHERE  Q.QUEUE_CODE = #{queueCode}
+	  ]]>
+	</select>
+
+	<select id="getMaxQueueId" resultType="string">
+		<![CDATA[
+	    SELECT
+			Max(Q.QUEUE_ID) as QUEUE_ID
+		FROM
+			CM_QUEUE Q
+	  ]]>
+	</select>
+
+	<insert id="addQueue" parameterType="com.meicloud.model.Queue">
+		insert into `CM_QUEUE` (`QUEUE_CODE`,`QUEUE_NAME`,`SVN_URL`,`SVN_USERNAME`,`SVN_PASSWORD`,`GIT_URL`,`GIT_USERNAME`,`GIT_PASSWORD`)
+		 values (#{queueCode},#{queueName},#{svnUrl},#{svnUserName},#{svnPassWord},#{gitUrl},#{gitUserName},#{gitPassWord})
+	</insert>
+
+	<update id="updateQueue" parameterType="com.meicloud.model.Queue">
+		update `CM_QUEUE` set  `QUEUE_CODE`=#{queueCode},
+		`QUEUE_NAME`=#{queueName},
+		`SVN_URL`=#{svnUrl},
+		`SVN_USERNAME`=#{svnUserName},
+		`SVN_PASSWORD`=#{svnPassWord},
+		`GIT_URL`=#{gitUrl},
+		`GIT_USERNAME`=#{gitUserName},
+		`GIT_PASSWORD`=#{gitPassWord}
+		 where `QUEUE_ID`=#{queueId}
+	</update>
+
+	<delete id="delQueue" >
+		delete from `CM_QUEUE` where `QUEUE_ID`=#{queueId}
+	</delete>
+
+
+	<select id="findListByRoles" resultMap="baseSql" parameterType="java.util.List">
+	    SELECT
+		DISTINCT Q.QUEUE_ID,
+			Q.QUEUE_CODE,
+			Q.QUEUE_NAME,
+			Q.SVN_URL,
+			Q.SVN_USERNAME,
+			Q.SVN_PASSWORD,
+			Q.GIT_URL,
+			Q.GIT_USERNAME,
+			Q.GIT_PASSWORD
+		FROM
+			CM_QUEUE Q
+			LEFT JOIN CM_ROLE_QUEUE R ON R.QUEUE_ID=Q.QUEUE_ID
+			WHERE 1=1
+			<if test="list!=null  and list.size >0 ">
+				and R.ROLE_ID IN
+				<foreach item="item" index="index" collection="list" open="("  separator="," close=")">
+					#{item}
+				</foreach>
+			</if>
+	</select>
+
+
+
+</mapper>

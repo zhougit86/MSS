@@ -1,0 +1,204 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.meicloud.dao.AccountMapper">
+
+	<resultMap id="account" type="com.meicloud.model.Account">
+	  <result property="account" column="ACCOUNT" jdbcType="VARCHAR" javaType="java.lang.String"/>
+	  <result property="password" column="PASSWORD" jdbcType="VARCHAR" javaType="java.lang.String"/>
+	  <result property="createDate" column="C_DATE" jdbcType="TIMESTAMP" javaType="java.util.Date"/>
+	  <result property="enable" column="IS_ENABLE" jdbcType="TINYINT" javaType="boolean"/>
+	  <result property="realName" column="REAL_NAME" jdbcType="VARCHAR" javaType="java.lang.String"/>
+	  <result property="svnOn" column="SVN_ON" jdbcType="TINYINT" javaType="boolean"/>
+	</resultMap>
+
+	<resultMap type="com.meicloud.model.Server" id="queryServerInfo">
+		<result property="id" column="ID" jdbcType="INTEGER" javaType="int"/>
+		<result property="state" column="STATE" jdbcType="INTEGER" javaType="int"/>
+		<result property="createDate" column="C_DATE" jdbcType="TIMESTAMP" javaType="java.util.Date"/>
+		<result property="updateDate" column="U_DATE" jdbcType="TIMESTAMP" javaType="java.util.Date"/>
+		<result property="ip" column="IP" jdbcType="VARCHAR" javaType="java.lang.String"/>
+		<result property="type" column="TYPE" jdbcType="VARCHAR" javaType="java.lang.String"/>
+		<result property="runJobCount" column="RUN_JOB_COUNT" jdbcType="INTEGER" javaType="int"/>
+		<result property="appPort" column="APP_PORT" jdbcType="VARCHAR" javaType="java.lang.String"/>
+		<result property="desc" column="DESC" jdbcType="VARCHAR" javaType="java.lang.String"/>
+		<result property="queueId" column="QUEUE_ID" jdbcType="VARCHAR" javaType="java.lang.String"/>
+		<result property="queueName" column="QUEUE_NAME" jdbcType="VARCHAR" javaType="java.lang.String"/>
+		<result property="name" column="NAME" jdbcType="VARCHAR" javaType="java.lang.String"/>
+		<result property="perform" column="IS_PERFORM" jdbcType="BIT" javaType="java.lang.Boolean"/>
+		<result property="available" column="IS_AVAILABLE" jdbcType="BIT" javaType="java.lang.Boolean"/>
+	</resultMap>
+
+	<!-- 帐号密码信息改为从美的4A LDAP中验证 -->
+	<select id="queryAccount" parameterType="com.meicloud.model.Account" resultMap="account">
+		<![CDATA[
+	    SELECT
+			ACCOUNT,
+			PASSWORD,
+			C_DATE,
+			IS_ENABLE,
+			REAL_NAME,
+			SVN_ON
+		FROM
+			cm_account
+		WHERE
+			ACCOUNT = #{account}
+		ORDER BY ACCOUNT DESC LIMIT 1
+	  ]]>
+	</select>
+	
+	<select id="queryByAccountAndPassword" parameterType="com.meicloud.model.Account" resultMap="account">
+		<![CDATA[
+	    SELECT
+			ACCOUNT,
+			PASSWORD,
+			C_DATE,
+			IS_ENABLE,
+			REAL_NAME,
+			SVN_ON
+		FROM
+			cm_account
+		WHERE
+			ACCOUNT = #{account} and PASSWORD = #{password}
+		ORDER BY ACCOUNT DESC LIMIT 1
+	  ]]>
+	</select>
+	
+	<!-- AND PASSWORD = #{password} -->
+
+	<update id="updatePassword" parameterType="com.meicloud.model.Account">
+		<![CDATA[
+		UPDATE cm_account
+		SET PASSWORD = #{password}
+		WHERE
+			ACCOUNT = #{account}
+		AND PASSWORD = #{oldPassword}
+		]]>
+	</update>
+
+	<update id="updateSvnOn">
+		<![CDATA[
+		UPDATE cm_account
+		SET SVN_ON = #{svnOn}
+		WHERE
+			ACCOUNT = #{account}
+		]]>
+	</update>
+
+
+
+	<select id="queryCmServer" resultType="string">
+		<![CDATA[
+			SELECT
+				CONCAT(
+					'http://',
+					IP,
+					':',
+					APP_PORT,
+					'/',
+					NAME,
+					'/config/configs.do'
+				) AS URL
+			FROM
+				cm_server
+			WHERE
+				NAME = 'MSS_DE' and IS_PERFORM = 1 and STATE = 0 and IS_AVAILABLE = 1 limit 1
+		]]>
+	</select>
+
+	<select id="getServerList" resultMap="queryServerInfo" parameterType="com.meicloud.model.Server">
+		SELECT
+		t.*
+		FROM
+		CM_SERVER t
+		where 1=1
+		<if test="available!=null">
+			and t.IS_AVAILABLE=#{available}
+		</if>
+		<if test="type!=null">
+			and t.TYPE=#{type}
+		</if>
+		<if test="state!=null">
+			and t.STATE=#{state}
+		</if>
+	</select>
+
+
+	
+	<select id="list" resultMap="account" parameterType="java.lang.String">
+		SELECT
+			ACCOUNT,
+			C_DATE,
+			IS_ENABLE,
+			REAL_NAME,
+			SVN_ON
+		FROM
+			cm_account
+		WHERE 1=1
+		<if test="_parameter!=null and _parameter !='' ">
+			AND (
+			ACCOUNT LIKE CONCAT('%', #{queryKey}, '%')
+			OR REAL_NAME LIKE CONCAT('%', #{queryKey} , '%')
+			)
+		</if>
+	</select>
+	
+	<select id="queryByAccount" parameterType="java.lang.String" resultMap="account">
+	  <![CDATA[
+	    SELECT
+			ACCOUNT,
+			PASSWORD,
+			C_DATE,
+			IS_ENABLE,
+			REAL_NAME,
+			SVN_ON
+		FROM
+			cm_account
+		WHERE
+			ACCOUNT = #{account}
+		ORDER BY ACCOUNT DESC LIMIT 1
+	  ]]>
+	</select>
+	
+	<insert id="add" parameterType="com.meicloud.model.Account">
+		insert into cm_account (
+			ACCOUNT,
+			IS_ENABLE,
+			REAL_NAME,
+			SVN_ON,
+			PASSWORD
+		)
+		VALUES
+			(
+				#{account},
+				#{enable},
+				#{realName},
+				#{svnOn},
+				#{password}
+			)
+	</insert>
+	
+	<update id="updateEnable" parameterType="java.util.Map">
+		UPDATE cm_account
+			SET IS_ENABLE = abs(IS_ENABLE - 1)
+		WHERE
+			account = #{account}
+	</update>
+
+	<delete id="delete" parameterType="java.lang.String">
+		delete from cm_account where account = #{account}
+	</delete>
+
+	
+	<update id="update" parameterType="com.meicloud.model.Account">
+		UPDATE cm_account
+			SET IS_ENABLE=#{enable},
+			SVN_ON=#{svnOn},
+			REAL_NAME=#{realName}
+		  <if test="password!=null">
+		  	  ,password = #{password}
+		  </if>
+		WHERE
+			ACCOUNT = #{account}
+	</update>
+
+</mapper>

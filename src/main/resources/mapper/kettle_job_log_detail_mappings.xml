@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.meicloud.dao.KettleJobLogDetailMapper">
+
+	<resultMap id="jobLogDetail" type="com.meicloud.model.KettleJobLogDetail">
+	  <result property="idBatch" column="ID_BATCH" javaType="java.lang.Integer" jdbcType="INTEGER"/>
+	  <result property="channelId" column="CHANNEL_ID" javaType="java.lang.String" jdbcType="VARCHAR"/>
+	  <result property="logDate" column="LOG_DATE" javaType="java.util.Date" jdbcType="TIMESTAMP"/>
+	  <result property="transName" column="TRANSNAME" javaType="java.lang.String" jdbcType="VARCHAR"/>
+	  <result property="stepName" column="STEPNAME" javaType="java.lang.String" jdbcType="VARCHAR"/>
+	  <result property="linesRead" column="LINES_READ" javaType="java.lang.Integer" jdbcType="INTEGER"/>
+	  <result property="linesWritten" column="LINES_WRITTEN" javaType="java.lang.Integer" jdbcType="INTEGER"/>
+	  <result property="linesUpdated" column="LINES_UPDATED" javaType="java.lang.Integer" jdbcType="INTEGER"/>
+	  <result property="linesInput" column="LINES_INPUT" javaType="java.lang.Integer" jdbcType="INTEGER"/>
+	  <result property="linesOutput" column="LINES_OUTPUT" javaType="java.lang.Integer" jdbcType="INTEGER"/>
+	  <result property="linesReject" column="LINES_REJECTED" javaType="java.lang.Integer" jdbcType="INTEGER"/>
+	  <result property="errors" column="ERRORS" javaType="java.lang.Integer" jdbcType="INTEGER"/>
+	  <result property="result" column="RESULT" javaType="java.lang.String" jdbcType="VARCHAR"/>
+	  <result property="nrResultRows" column="NR_RESULT_ROWS" javaType="java.lang.Integer" jdbcType="INTEGER"/>
+	  <result property="nrResultFiles" column="NR_RESULT_FILES" javaType="java.lang.Integer" jdbcType="INTEGER"/>
+	  <result property="copyNr" column="COPY_NR" javaType="java.lang.Integer" jdbcType="INTEGER"/>
+	</resultMap>
+	
+	<select id="getKettleJobLogDetailListByIdBatch" parameterType="int" resultMap="jobLogDetail">
+	<![CDATA[
+	select 
+		ID_BATCH,
+		CHANNEL_ID,
+		LOG_DATE,
+		TRANSNAME,
+		STEPNAME,
+		LINES_READ,
+		LINES_WRITTEN,
+		LINES_UPDATED,
+		LINES_INPUT,
+		LINES_OUTPUT,
+		LINES_REJECTED,
+		ERRORS,
+		RESULT,
+		NR_RESULT_ROWS,
+		NR_RESULT_FILES,
+		COPY_NR
+	from 
+	    CM_KETTLE_DETAIL_LOG
+	where 
+		ID_BATCH=#{jobId}
+	]]>
+	</select>
+
+    <delete id="deleteByJobId" parameterType="int">
+       delete from CM_KETTLE_DETAIL_LOG where TRANSNAME in (select J.JOB_NAME from CM_JOB J where J.JOB_ID=#{jobId})	   
+	</delete>
+	
+	<delete id="deleteByGroupId" parameterType="int">
+       delete from CM_KETTLE_DETAIL_LOG where TRANSNAME in (select J.JOB_NAME from CM_JOB J where J.GROUP_ID=#{groupId})	   
+	</delete>
+
+</mapper>

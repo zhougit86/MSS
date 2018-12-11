@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.meicloud.dao.GroupReferMapper">
+
+	<resultMap id="groupRefer" type="com.meicloud.model.GroupRefer">
+	  <result property="referId" column="REFER_ID" jdbcType="INTEGER" javaType="int"/>
+	  <result property="referedGroupId" column="REFERED_GROUP_ID" jdbcType="INTEGER" javaType="int"/>
+	  <result property="groupId" column="GROUP_ID" jdbcType="INTEGER" javaType="int"/>
+		<result property="createDate" column="C_DATE" jdbcType="TIMESTAMP" javaType="java.util.Date"/>
+	</resultMap>
+	
+	<select id="getGroupReferByGroupId" resultMap="groupRefer" parameterType="com.meicloud.model.GroupRefer">
+		SELECT
+			REFER_ID,
+			REFERED_GROUP_ID,
+			GROUP_ID
+		FROM
+			cm_group_refer
+		WHERE
+			group_id = #{groupId}
+		order by C_DATE desc
+	</select>
+
+
+	<select id="getAll" resultMap="groupRefer">
+		<![CDATA[
+		select
+			REFER_ID,
+			REFERED_GROUP_ID,
+			GROUP_ID,
+			C_DATE
+		from
+			CM_GROUP_REFER
+		]]>
+	</select>
+
+	<select id="getReferedList" resultMap="groupRefer" parameterType="int">
+		<![CDATA[
+		select
+			REFER_ID,
+			REFERED_GROUP_ID,
+			GROUP_ID,
+			C_DATE
+		from
+			CM_GROUP_REFER
+		WHERE GROUP_ID=#{groupId}
+		]]>
+	</select>
+
+	<select id="getPostList" resultMap="groupRefer" parameterType="int">
+		<![CDATA[
+		select
+			REFER_ID,
+			REFERED_GROUP_ID,
+			GROUP_ID,
+			C_DATE
+		from
+			CM_GROUP_REFER
+		WHERE REFERED_GROUP_ID=#{referedGroupId}
+		]]>
+	</select>
+
+	<insert id="add" parameterType="com.meicloud.model.GroupLevel" keyProperty="referId">
+		<selectKey resultType="int" keyProperty="referId" order="AFTER" >
+			SELECT LAST_INSERT_ID() AS referId
+		</selectKey>
+		insert into CM_GROUP_REFER(REFERED_GROUP_ID,GROUP_ID,C_DATE)
+		values(#{referedGroupId},#{groupId},NOW())
+	</insert>
+
+	<!-- 删除自身依赖 -->
+	<delete id="deleteByGroupId" parameterType="int">
+		<![CDATA[
+	     delete from CM_GROUP_REFER where GROUP_ID=#{groupId}
+	  ]]>
+	</delete>
+	
+	<delete id="deleteByReferedGroupId" parameterType="int">
+		<![CDATA[
+	     delete from CM_GROUP_REFER where REFERED_GROUP_ID=#{groupId}
+	  ]]>
+	</delete>
+	
+</mapper>

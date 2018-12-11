@@ -1,0 +1,1 @@
+alter table cm_job_retry_rule  modify column R_NAME varchar(256);

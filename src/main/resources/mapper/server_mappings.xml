@@ -1,0 +1,400 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.meicloud.dao.ServerMapper">
+
+	<resultMap type="com.meicloud.model.Server" id="Server">
+	   <result property="id" column="ID" jdbcType="INTEGER" javaType="int"/>
+	   <result property="state" column="STATE" jdbcType="INTEGER" javaType="int"/>
+	   <result property="createDate" column="C_DATE" jdbcType="TIMESTAMP" javaType="java.util.Date"/>
+	   <result property="updateDate" column="U_DATE" jdbcType="TIMESTAMP" javaType="java.util.Date"/>
+       <result property="ip" column="IP" jdbcType="VARCHAR" javaType="java.lang.String"/>
+       <result property="type" column="TYPE" jdbcType="VARCHAR" javaType="java.lang.String"/>
+       <result property="runJobCount" column="RUN_JOB_COUNT" jdbcType="INTEGER" javaType="int"/>
+       <result property="appPort" column="APP_PORT" jdbcType="VARCHAR" javaType="java.lang.String"/>
+	   <result property="logAppPort" column="LOG_APP_PORT" jdbcType="VARCHAR" javaType="java.lang.String"/>
+       <result property="desc" column="DESC" jdbcType="VARCHAR" javaType="java.lang.String"/>
+       <result property="queueId" column="QUEUE_ID" jdbcType="VARCHAR" javaType="java.lang.String"/>
+       <result property="queueName" column="QUEUE_NAME" jdbcType="VARCHAR" javaType="java.lang.String"/>
+       <result property="name" column="NAME" jdbcType="VARCHAR" javaType="java.lang.String"/>
+       <result property="perform" column="IS_PERFORM" jdbcType="BIT" javaType="java.lang.Boolean"/>
+       <result property="available" column="IS_AVAILABLE" jdbcType="BIT" javaType="java.lang.Boolean"/>
+	   <result property="svnLogPath" column="SVN_LOGPATH" jdbcType="VARCHAR" javaType="java.lang.String"/>
+	   <result property="maxParalle" column="MAX_PARALLE" jdbcType="INTEGER" javaType="int"/>
+	   <result property="currentExecuteJobCount" column="current_Execute_JobCount" jdbcType="INTEGER" javaType="int"/>
+       
+       <collection property="list" ofType="com.meicloud.model.Server" select="getCmServerInfo" column="{queueId=QUEUE_ID}">
+       </collection>
+    </resultMap>
+    
+    <resultMap type="com.meicloud.model.Server" id="queryServerInfo">
+    	<result property="id" column="ID" jdbcType="INTEGER" javaType="int"/>
+	   <result property="state" column="STATE" jdbcType="INTEGER" javaType="int"/>
+	   <result property="createDate" column="C_DATE" jdbcType="TIMESTAMP" javaType="java.util.Date"/>
+	   <result property="updateDate" column="U_DATE" jdbcType="TIMESTAMP" javaType="java.util.Date"/>
+       <result property="ip" column="IP" jdbcType="VARCHAR" javaType="java.lang.String"/>
+       <result property="type" column="TYPE" jdbcType="VARCHAR" javaType="java.lang.String"/>
+       <result property="runJobCount" column="RUN_JOB_COUNT" jdbcType="INTEGER" javaType="int"/>
+       <result property="appPort" column="APP_PORT" jdbcType="VARCHAR" javaType="java.lang.String"/>
+		<result property="logAppPort" column="LOG_APP_PORT" jdbcType="VARCHAR" javaType="java.lang.String"/>
+       <result property="desc" column="DESC" jdbcType="VARCHAR" javaType="java.lang.String"/>
+       <result property="queueId" column="QUEUE_ID" jdbcType="VARCHAR" javaType="java.lang.String"/>
+       <result property="queueName" column="QUEUE_NAME" jdbcType="VARCHAR" javaType="java.lang.String"/>
+       <result property="name" column="NAME" jdbcType="VARCHAR" javaType="java.lang.String"/>
+       <result property="perform" column="IS_PERFORM" jdbcType="BIT" javaType="java.lang.Boolean"/>
+       <result property="available" column="IS_AVAILABLE" jdbcType="BIT" javaType="java.lang.Boolean"/>
+	   <result property="svnLogPath" column="SVN_LOGPATH" jdbcType="VARCHAR" javaType="java.lang.String"/>
+	   <result property="maxParalle" column="MAX_PARALLE" jdbcType="INTEGER" javaType="int"/>
+	   <result property="currentExecuteJobCount" column="current_Execute_JobCount" jdbcType="INTEGER" javaType="int"/>
+    </resultMap>
+    
+    <resultMap id="CmServerInfo" type="com.meicloud.model.Server">
+    	<result property="id" column="ID" jdbcType="INTEGER" javaType="int"/>
+    	<result property="queueId" column="QUEUE_ID" jdbcType="VARCHAR" javaType="java.lang.String"/>
+    	<result property="queueName" column="QUEUE_NAME" jdbcType="VARCHAR" javaType="java.lang.String"/>
+    	<result property="desc" column="DESC" jdbcType="VARCHAR" javaType="java.lang.String"/>
+    	<result property="maxParalle" column="MAX_PARALLE" jdbcType="INTEGER" javaType="int"/>
+    	<result property="currentExecuteJobCount" column="current_Execute_JobCount" jdbcType="INTEGER" javaType="int"/>
+    </resultMap>
+    
+    <resultMap id="ServerMinJob" type="com.meicloud.model.Server">
+    	<result property="id" column="EXECUTE_SERVER_ID" jdbcType="INTEGER" javaType="int"/>
+    	<result property="jobSum" column="jobSum" jdbcType="INTEGER" javaType="int"/>
+    </resultMap>
+    
+    <insert id="add"
+		parameterType="com.meicloud.model.Server"
+		useGeneratedKeys="true" keyProperty="id">
+		<![CDATA[
+		insert into cm_server(ID,STATE,IP,C_DATE,U_DATE,NAME,TYPE,QUEUE_ID,APP_PORT,LOG_APP_PORT,`DESC`,QUEUE_NAME,IS_PERFORM,IS_AVAILABLE,SVN_LOGPATH,MAX_PARALLE)
+		 values(#{id},#{state},#{ip},NOW(),NOW(),#{name},#{type},#{queueId},#{appPort},#{logAppPort},#{desc},#{queueName},#{perform},#{available},#{svnLogPath},#{maxParalle})
+		 ]]>
+	</insert>
+	
+	
+
+	<update id="update"
+		parameterType="com.meicloud.model.Server">
+		<![CDATA[
+		update cm_server t 
+		set t.STATE=#{state}
+			,t.IP=#{ip}
+			,t.U_DATE=#{updateDate}
+			,t.NAME=#{name}
+			,t.TYPE=#{type}
+			,t.QUEUE_ID=#{queueId}
+			,t.APP_PORT=#{appPort}
+			,t.LOG_APP_PORT=#{logAppPort}
+			,t.`DESC`=#{desc}
+			,t.QUEUE_NAME=#{queueName}
+			,t.IS_PERFORM=#{perform}
+			,t.IS_AVAILABLE=#{available}
+			,t.MAX_PARALLE=#{maxParalle}
+			,t.SVN_LOGPATH=#{svnLogPath}
+			,t.current_Execute_JobCount=#{currentExecuteJobCount}
+		 where t.ID=#{id}
+		  ]]>
+	</update>
+    
+    <delete id="delete" parameterType="int">
+       <![CDATA[
+          DELETE
+			FROM
+				CM_SERVER
+			WHERE
+				ID = #{id}
+       ]]>
+    </delete>
+    
+    <select id="list" resultMap="queryServerInfo" parameterType="int">
+      <![CDATA[
+       SELECT
+			S.ID,
+			S.STATE,
+			S.U_DATE,
+			S.C_DATE,
+			IP,
+			TYPE,
+			S.IS_PERFORM,
+			S.IS_AVAILABLE,
+			S.SVN_LOGPATH,
+			S.MAX_PARALLE,
+			S.current_Execute_JobCount,
+			COUNT(DISTINCT RJ.JOB_ID) AS RUN_JOB_COUNT
+		FROM
+			CM_SERVER S
+		LEFT JOIN CM_RUN_JOB RJ ON S.ID = RJ.EXECUTE_SERVER_ID
+		AND RJ.STATE = #{runningState}
+		GROUP BY
+			S.ID
+      ]]>
+    </select>
+    
+     <select id="getServerById" resultMap="queryServerInfo" parameterType="int">
+      <![CDATA[
+        SELECT
+			C.ID,
+			C.STATE,
+			C.C_DATE,
+			C.U_DATE,
+			C.TYPE,
+			C.IP,
+			C.NAME,
+			C.APP_PORT,
+			C.LOG_APP_PORT,
+			C.QUEUE_ID,
+			Q.QUEUE_NAME,
+			C.IS_PERFORM,
+			C.IS_AVAILABLE,
+			C.SVN_LOGPATH,
+			C.MAX_PARALLE,
+			C.current_Execute_JobCount,
+			C.DESC
+		FROM
+			CM_SERVER C
+			LEFT JOIN CM_QUEUE Q ON C.QUEUE_ID=Q.QUEUE_ID
+		WHERE C.ID = #{id}
+      ]]>
+	</select>
+
+	<select id="getServerByQueueIdAndMinJob" resultMap="ServerMinJob" parameterType="com.meicloud.model.Server">
+      SELECT COUNT(*) AS jobSum,job.EXECUTE_SERVER_ID FROM cm_job job 
+		LEFT JOIN cm_server s ON job.EXECUTE_SERVER_ID = s.id
+		WHERE (s.TYPE = 'ES' or s.TYPE= 'COMPREHENSIVE' OR s.TYPE= 'comprehensive') AND s.STATE = 0
+      <if test="queueId!=null">
+      	s.QUEUE_ID = #{queueId}
+      </if>
+      GROUP BY job.EXECUTE_SERVER_ID ORDER BY jobSum LIMIT 1
+	</select>
+
+	<select id="getServerByMinExecuteJobCount" resultMap="queryServerInfo" parameterType="string">
+        SELECT
+			C.ID,
+			C.STATE,
+			C.C_DATE,
+			C.U_DATE,
+			C.TYPE,
+			C.IP,
+			C.NAME,
+			C.APP_PORT,
+			C.LOG_APP_PORT,
+			C.QUEUE_ID,
+			C.IS_PERFORM,
+			C.IS_AVAILABLE,
+			C.SVN_LOGPATH,
+			C.MAX_PARALLE,
+			C.current_Execute_JobCount,
+			C.DESC
+		FROM
+			CM_SERVER C
+			where C.STATE = 0 and (C.TYPE = 'ES' or C.TYPE= 'COMPREHENSIVE' OR C.TYPE= 'comprehensive')
+			<if test="queueId!=null">
+		   		and C.QUEUE_ID=#{queueId}
+		  	</if>
+		order by C.current_Execute_JobCount ASC,C.U_DATE ASC limit 1
+	</select>
+	
+	<select id="getServerIdByMinExecuteJobCount" resultType="String" parameterType="string">
+		SELECT a.ID FROM
+			(SELECT IFNULL(t.sum,0) AS SUM,s.ID  FROM cm_server s LEFT JOIN (SELECT COUNT(1) sum,cm_run_job.EXECUTE_SERVER_ID FROM cm_run_job WHERE STATE = 2 GROUP BY EXECUTE_SERVER_ID) t ON t.EXECUTE_SERVER_ID = s.ID WHERE s.QUEUE_ID = #{queueId} ORDER BY sum ASC LIMIT 1) a;
+
+	</select>
+    
+    <select id="getServerList" resultMap="queryServerInfo" parameterType="com.meicloud.model.Server">
+        SELECT
+		C.ID,
+		C.STATE,
+		C.C_DATE,
+		C.U_DATE,
+		C.TYPE,
+		C.IP,
+		C.NAME,
+		C.APP_PORT,
+		C.LOG_APP_PORT,
+		C.QUEUE_ID,
+		Q.QUEUE_NAME,
+		C.IS_PERFORM,
+		C.IS_AVAILABLE,
+		C.SVN_LOGPATH,
+		C.MAX_PARALLE,
+		C.current_Execute_JobCount,
+		C.DESC
+		FROM
+			CM_SERVER C
+		LEFT JOIN CM_QUEUE Q ON C.QUEUE_ID=Q.QUEUE_ID
+		where 1=1 
+      <if test="state!=null">
+   		and C.STATE=#{state}
+  	  </if>
+  	  <if test="type!=null">
+   		and (C.TYPE=#{type} or C.TYPE= 'COMPREHENSIVE' OR C.TYPE= 'comprehensive')
+  	  </if>
+  	  <if test="ip!=null">
+   		and C.IP=#{ip}
+  	  </if>
+  	  <if test="queueId!=null">
+   		and C.QUEUE_ID=#{queueId}
+  	  </if>
+    </select>
+    
+    <select id="getServerListByPort" resultMap="queryServerInfo" parameterType="com.meicloud.model.Server">
+    	 SELECT
+		C.ID,
+		C.STATE,
+		C.C_DATE,
+		C.U_DATE,
+		C.TYPE,
+		C.IP,
+		C.NAME,
+		C.APP_PORT,
+		C.LOG_APP_PORT,
+		C.QUEUE_ID,
+		C.IS_PERFORM,
+		C.IS_AVAILABLE,
+		C.SVN_LOGPATH,
+		C.MAX_PARALLE,
+		C.current_Execute_JobCount,
+		C.DESC
+		FROM
+			CM_SERVER C
+		where 1=1
+		<if test="ip!=null">
+	   		and C.IP=#{ip}
+	  	</if>
+		<if test="appPort!=null and appPort!=0">
+   			and (C.APP_PORT=#{appPort} or  C.LOG_APP_PORT=#{appPort})
+  	   </if>
+    </select>
+    
+    <select id="getServerListByIpAndType" resultMap="queryServerInfo" parameterType="com.meicloud.model.Server">
+        SELECT
+		C.ID,
+		C.STATE,
+		C.C_DATE,
+		C.U_DATE,
+		C.TYPE,
+		C.IP,
+		C.NAME,
+		C.APP_PORT,
+		C.LOG_APP_PORT,
+		C.QUEUE_ID,
+		Q.QUEUE_NAME,
+		C.IS_PERFORM,
+		C.IS_AVAILABLE,
+		C.SVN_LOGPATH,
+		C.MAX_PARALLE,
+		C.current_Execute_JobCount,
+		C.DESC
+		FROM
+			CM_SERVER C
+		LEFT JOIN CM_QUEUE Q ON C.QUEUE_ID=Q.QUEUE_ID
+		where 1=1 
+  	  <if test="ip!=null">
+   		and C.IP=#{ip}
+  	  </if>
+  	  <if test="type!=null">
+   		and C.TYPE=#{type}
+  	  </if>
+    </select>
+    
+    <select id="getServerListByTypeAndPerform" resultMap="queryServerInfo" parameterType="com.meicloud.model.Server">
+		SELECT
+		C.ID,
+		C.STATE,
+		C.C_DATE,
+		C.U_DATE,
+		C.TYPE,
+		C.IP,
+		C.NAME,
+		C.APP_PORT,
+		C.LOG_APP_PORT,
+		C.QUEUE_ID,
+		Q.QUEUE_NAME,
+		C.IS_PERFORM,
+		C.IS_AVAILABLE,
+		C.SVN_LOGPATH,
+		C.MAX_PARALLE,
+		C.current_Execute_JobCount,
+		C.DESC
+		FROM
+			CM_SERVER C
+		LEFT JOIN CM_QUEUE Q ON C.QUEUE_ID=Q.QUEUE_ID
+		where 1=1 
+  	  <if test="perform!=null">
+   		and C.IS_PERFORM=#{perform}
+  	  </if>
+  	  <if test="type!=null">
+   		and C.TYPE=#{type}
+  	  </if>
+    </select>
+    
+    <select id="queryCmServerList" resultMap="Server">
+    	<![CDATA[
+    		SELECT DISTINCT
+				Q.QUEUE_NAME,
+				F.QUEUE_ID
+			FROM
+				CM_SERVER F
+				LEFT JOIN CM_QUEUE Q ON F.QUEUE_ID=Q.QUEUE_ID
+    	]]>
+    </select>
+    
+    <select id="getCmServerInfo" resultMap="CmServerInfo" parameterType="map">
+    	<![CDATA[
+    		SELECT
+				F.ID,
+				F.QUEUE_ID,
+				F.MAX_PARALLE,
+				F.`DESC`
+			FROM
+				CM_SERVER F
+			WHERE
+				F.QUEUE_ID = #{queueId,jdbcType=VARCHAR}
+    	]]>
+    </select>
+    
+    <select id="queryCmServer" resultMap="queryServerInfo" parameterType="int">
+    	SELECT
+			C.ID,
+			C.STATE,
+			C.C_DATE,
+			C.U_DATE,
+			C.TYPE,
+			C.IP,
+			C.NAME,
+			C.APP_PORT,
+			C.LOG_APP_PORT,
+			C.QUEUE_ID,
+			C.IS_PERFORM,
+			C.IS_AVAILABLE,
+			C.SVN_LOGPATH,
+			C.MAX_PARALLE,
+			C.current_Execute_JobCount,
+			C.DESC
+		FROM
+			CM_SERVER C WHERE C.ID=#{serverId}
+    </select>
+
+	<select id="getServerByIP" resultMap="queryServerInfo"  parameterType="string">
+        SELECT
+			C.ID,
+			C.STATE,
+			C.C_DATE,
+			C.U_DATE,
+			C.TYPE,
+			C.IP,
+			C.NAME,
+			C.APP_PORT,
+			C.LOG_APP_PORT,
+			C.QUEUE_ID,
+			C.IS_PERFORM,
+			C.IS_AVAILABLE,
+			C.SVN_LOGPATH,
+			C.MAX_PARALLE,
+			C.current_Execute_JobCount,
+			C.DESC
+		FROM
+			CM_SERVER C
+		WHERE C.IP = #{ip} LIMIT 1
+	</select>
+	
+</mapper>

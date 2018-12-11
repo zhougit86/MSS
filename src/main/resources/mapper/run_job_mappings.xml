@@ -1,0 +1,1291 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.meicloud.dao.RunJobMapper">
+
+	<resultMap type="com.meicloud.model.RunJob" id="runJob">
+		<result property="runJobId" column="RUN_JOB_ID" jdbcType="INTEGER" javaType="int"/>
+		<result property="jobId" column="JOB_ID" jdbcType="INTEGER" javaType="int"/>
+		<result property="groupId" column="GROUP_ID" jdbcType="INTEGER" javaType="int"/>
+		<result property="state" column="STATE" jdbcType="INTEGER" javaType="int"/>
+		<result property="logFile" column="LOG_FILE" jdbcType="VARCHAR" javaType="java.lang.String"/>
+		<result property="serverFile" column="SERVER_FILE" jdbcType="VARCHAR" javaType="java.lang.String"/>
+		<result property="executeServerId" column="EXECUTE_SERVER_ID" jdbcType="INTEGER" javaType="int"/>
+		<result property="ip" column="IP" jdbcType="VARCHAR" javaType="java.lang.String"/>
+		<result property="msg" column="MSG" jdbcType="VARCHAR" javaType="java.lang.String"/>
+		<result property="debugLevel" column="DEBUG_LEVEL" jdbcType="VARCHAR" javaType="java.lang.String"/>
+		<result property="timeOutIntervalNum" column="R_TIMEOUT_INTERVAL_NUM" jdbcType="INTEGER" javaType="int"/>
+		<result property="timeOutRetryedNum" column="TIMEOUT_RETRYED_COUNT" jdbcType="INTEGER" javaType="int"/>
+		<result property="rErrorIntervalNum" column="R_ERROR_INTERVAL_NUM" jdbcType="INTEGER" javaType="int"/>
+		<result property="rTimeoutIntervalNum" column="R_TIMEOUT_INTERVAL_NUM" jdbcType="INTEGER" javaType="int"/>
+		<result property="runVersion" column="RUN_VERSION" jdbcType="INTEGER" javaType="int"/>
+		<result property="orderNo" column="ORDER_NO" jdbcType="INTEGER" javaType="int"/>
+		<result property="appendParams" column="APPEND_PARAMS" jdbcType="VARCHAR" javaType="java.lang.String"/>
+		<result property="queueId" column="QUEUE_ID" jdbcType="VARCHAR" javaType="java.lang.String"/>
+	</resultMap>
+
+	<resultMap type="com.meicloud.model.RunConfirm" id="runConfirm">
+		<result property="confirmId" column="CONFIRM_ID" javaType="int" jdbcType="INTEGER"/>
+		<result property="frontGroupName" column="FRONT_GROUP_NAME" javaType="java.lang.String" jdbcType="VARCHAR"/>
+		<result property="postGroupName" column="POST_GROUP_NAME" javaType="java.lang.String" jdbcType="VARCHAR"/>
+		<result property="createAccount" column="C_ACCOUNT" javaType="java.lang.String" jdbcType="VARCHAR"/>
+		<result property="updateAccount" column="U_ACCOUNT" javaType="java.lang.String" jdbcType="VARCHAR"/>
+		<result property="createDate" column="C_DATE" javaType="java.util.Date" jdbcType="TIMESTAMP"/>
+		<result property="updateDate" column="U_DATE" javaType="java.util.Date" jdbcType="TIMESTAMP"/>
+		<result property="msg" column="MSG" javaType="java.lang.String" jdbcType="VARCHAR"/>
+	</resultMap>
+	
+	<select id="getByGroupId" parameterType="int" resultMap="runJob">
+		<![CDATA[
+	       SELECT
+				RJ.RUN_JOB_ID,
+				RJ.JOB_ID,
+				RJ.GROUP_ID,
+				RJ.STATE,
+				RJ.LOG_FILE,
+				RJ.SERVER_FILE,
+				RJ.EXECUTE_SERVER_ID,
+				RJ.MSG,
+				RJ.DEBUG_LEVEL,
+				RJ.RUN_VERSION,
+				APPEND_PARAMS,
+				RJ.RUN_PRIORITY,
+				QUEUE_ID
+			FROM
+				CM_RUN_JOB RJ
+			WHERE
+				GROUP_ID = #{groupId}
+			ORDER BY
+				RJ.RUN_PRIORITY ASC
+	    ]]>
+	</select>
+	
+	<select id="getErrorByGroupId" parameterType="int" resultMap="runJob">
+		<![CDATA[
+	       SELECT
+				RJ.RUN_JOB_ID,
+				RJ.JOB_ID,
+				RJ.GROUP_ID,
+				RJ.STATE,
+				RJ.ORDER_NO,
+				RJ.LOG_FILE,
+				RJ.SERVER_FILE,
+				RJ.EXECUTE_SERVER_ID,
+				RJ.MSG,
+				RJ.DEBUG_LEVEL,
+				RJ.RUN_VERSION,
+				APPEND_PARAMS,
+				RJ.RUN_PRIORITY,
+				QUEUE_ID
+			FROM
+				CM_RUN_JOB RJ
+			WHERE
+				GROUP_ID = #{groupId}
+				AND RJ.STATE = 3
+			ORDER BY
+				RJ.ORDER_NO ASC
+	    ]]>
+	</select>
+	
+	<select id="getWaitingByGroupId" parameterType="int" resultMap="runJob">
+		<![CDATA[
+	       SELECT
+				RJ.RUN_JOB_ID,
+				RJ.JOB_ID,
+				RJ.GROUP_ID,
+				RJ.STATE,
+				RJ.ORDER_NO,
+				RJ.LOG_FILE,
+				RJ.SERVER_FILE,
+				RJ.EXECUTE_SERVER_ID,
+				RJ.MSG,
+				RJ.DEBUG_LEVEL,
+				RJ.RUN_VERSION,
+				APPEND_PARAMS,
+				RJ.RUN_PRIORITY,
+				QUEUE_ID
+			FROM
+				CM_RUN_JOB RJ
+			WHERE
+				GROUP_ID = #{groupId}
+				AND RJ.STATE = 0
+				AND RJ.DATE_LATEST_SEND  IS NULL
+			ORDER BY
+				RJ.ORDER_NO ASC
+	    ]]>
+	</select>
+	
+	<select id="getWaitingByDateLatestSendIsNotNull" resultMap="runJob">
+		<![CDATA[
+	       SELECT
+				RJ.RUN_JOB_ID,
+				RJ.JOB_ID,
+				RJ.GROUP_ID,
+				RJ.STATE,
+				RJ.ORDER_NO,
+				RJ.LOG_FILE,
+				RJ.SERVER_FILE,
+				RJ.EXECUTE_SERVER_ID,
+				RJ.MSG,
+				RJ.DEBUG_LEVEL,
+				RJ.RUN_VERSION,
+				APPEND_PARAMS,
+				RJ.RUN_PRIORITY,
+				QUEUE_ID
+			FROM
+				CM_RUN_JOB RJ
+			WHERE
+			    RJ.STATE = 0
+				AND RJ.DATE_LATEST_SEND  IS not NULL
+				AND TIMEDIFF(NOW(), RJ.DATE_LATEST_SEND) > '00:30:00' 
+			ORDER BY
+				RJ.ORDER_NO ASC
+	    ]]>
+	</select>
+	
+	<select id="getRunJobByGroupIdAndOrderNo" parameterType="com.meicloud.model.RunJob" resultMap="runJob">
+		<![CDATA[
+	       SELECT
+				RJ.RUN_JOB_ID,
+				RJ.JOB_ID,
+				RJ.GROUP_ID,
+				RJ.STATE,
+				RJ.LOG_FILE,
+				RJ.SERVER_FILE,
+				RJ.EXECUTE_SERVER_ID,
+				RJ.MSG,
+				RJ.DEBUG_LEVEL,
+				RJ.RUN_VERSION,
+				APPEND_PARAMS,
+				RJ.RUN_PRIORITY,
+				QUEUE_ID
+			FROM
+				CM_RUN_JOB RJ
+			WHERE
+				GROUP_ID = #{groupId}
+				AND ORDER_NO < #{orderNo}
+				AND DATE_FORMAT(C_DATE,'%Y-%d-%m') = DATE_FORMAT(NOW(),'%Y-%d-%m')
+				AND STATE NOT IN (3, 4, 5)
+	    ]]>
+	</select>
+	
+	<select id="getRetryErrorCandidateJobs" parameterType="int" resultMap="runJob">
+	  <![CDATA[
+	     SELECT
+			RJ.RUN_JOB_ID,
+			RJ.JOB_ID,
+			RJ.GROUP_ID,
+			RJ.STATE,
+			RJ.LOG_FILE,
+			RJ.SERVER_FILE,
+			RJ.EXECUTE_SERVER_ID,
+			RJ.DEBUG_LEVEL,
+			RJ.MSG,
+			RJ.RUN_VERSION,
+			RJ.APPEND_PARAMS,
+			G.QUEUE_ID
+		FROM
+			CM_RUN_JOB RJ
+		LEFT JOIN cm_group G ON RJ.GROUP_ID = G.GROUP_ID
+		WHERE
+			RJ.STATE = #{errorState}
+		AND RJ.R_IS_ERROR = 1
+		AND RJ.R_ERROR_INTERVAL_NUM > RJ.ERROR_RETRYED_COUNT
+		AND TIMESTAMPDIFF(SECOND, RJ.U_DATE, NOW()) > RJ.R_INTERVAL_TIME
+	  ]]>
+	</select>
+	
+	<select id="getExpireCandidateJobs" parameterType="int" resultMap="runJob">
+	 	<![CDATA[
+	 	SELECT
+			rj.RUN_JOB_ID,
+			rj.STATE,
+			rj.JOB_ID,
+			rj.GROUP_ID,
+			rj.EXECUTE_SERVER_ID,
+			rj.SERVER_FILE,
+			rj.LOG_FILE,
+			rj.DEBUG_LEVEL,
+			rj.R_TIMEOUT_INTERVAL_NUM,
+			rj.TIMEOUT_RETRYED_COUNT,
+			rj.RUN_VERSION,
+			es.IP,
+			rj.APPEND_PARAMS,
+			G.QUEUE_ID
+		FROM
+			cm_run_job rj
+		LEFT JOIN cm_server es ON rj.EXECUTE_SERVER_ID = es.ID
+		LEFT JOIN cm_group G ON rj.GROUP_ID = G.GROUP_ID
+		WHERE
+			rj.R_IS_TIME = 1
+		AND rj.STATE = #{runningState}
+		AND TIMESTAMPDIFF(SECOND, rj.U_DATE, NOW()) > rj.R_TIMEOUT
+	 	]]>
+	</select>
+	
+	<select id="getExpireCandidateJobsBySysStart" parameterType="int" resultMap="runJob">
+	 	<![CDATA[
+		 	SELECT
+				rj.RUN_JOB_ID,
+				rj.STATE,
+				rj.JOB_ID,
+				rj.GROUP_ID,
+				rj.EXECUTE_SERVER_ID,
+				rj.SERVER_FILE,
+				rj.LOG_FILE,
+				rj.DEBUG_LEVEL,
+				rj.R_TIMEOUT_INTERVAL_NUM,
+				rj.TIMEOUT_RETRYED_COUNT,
+				rj.RUN_VERSION,
+				es.IP,
+				rj.APPEND_PARAMS,
+				G.QUEUE_ID
+			FROM
+				cm_run_job rj
+			LEFT JOIN cm_server es ON rj.EXECUTE_SERVER_ID = es.ID
+			LEFT JOIN cm_group G ON rj.GROUP_ID = G.GROUP_ID
+			WHERE rj.STATE = 2 and rj.EXECUTE_SERVER_ID = #{serverId}
+	 	]]>
+	</select>
+
+	<select id="getDummyGroupUnFinishedSuccessJobCount" parameterType="int" resultType="int">
+		SELECT
+			COUNT(JS.JOB_ID)
+		FROM
+			cm_job_state JS
+		LEFT JOIN cm_group_job_refer GJR ON JS.JOB_ID = GJR.JOB_ID
+		LEFT JOIN cm_job J ON JS.JOB_ID = J.JOB_ID
+		LEFT JOIN cm_group G ON JS.GROUP_ID = G.GROUP_ID
+		WHERE
+			GJR.GROUP_ID=#{groupId}
+		AND G.IS_ENABLE = 1
+		AND J.IS_ENABLE = 1
+		AND J.IS_ONLINE = 1
+		AND JS.STATE IN (0, 1, 2, 3)
+	</select>
+	
+	<select id="getRunJobCountByServerId" parameterType="int" resultType="int">
+		SELECT COUNT(1) FROM cm_run_job WHERE STATE = 2 AND EXECUTE_SERVER_ID = #{serverId}
+	</select>
+	
+	<update id="update4RetryError" parameterType="com.meicloud.model.RunJob">
+	     UPDATE CM_RUN_JOB
+		SET 
+			STATE=#{state},
+			ERROR_RETRYED_COUNT = ERROR_RETRYED_COUNT+1 ,			
+			U_DATE=NOW(),
+			MSG=#{msg},
+			DATE_LATEST_SEND = NOW(),
+			RUN_VERSION =RUN_VERSION+1
+		WHERE
+			RUN_JOB_ID=#{runJobId} 
+	</update>
+	
+	<update id="update4RetryExpire" parameterType="com.meicloud.model.RunJob">
+	    UPDATE CM_RUN_JOB
+		SET 
+			STATE=#{state},
+			TIMEOUT_RETRYED_COUNT = TIMEOUT_RETRYED_COUNT+1,
+			U_DATE=NOW(),
+			MSG=#{msg},
+			DATE_LATEST_SEND = NOW(),
+			RUN_VERSION = RUN_VERSION+1
+		WHERE
+			RUN_JOB_ID=#{runJobId} 
+	</update>
+	
+	<update id="updateJobStateBatch">
+		UPDATE cm_job_state
+		SET state = 0,
+		 U_DATE = NOW(),
+		 MSG = 'UPDATE BY SYSTEM QUARTZ OF EACH DAY MORNING...'
+		WHERE
+			GROUP_ID IN (
+				SELECT
+					TRIGGER_NAME
+				FROM
+					qrtz_triggers
+				WHERE
+					(cast(
+						FROM_UNIXTIME(NEXT_FIRE_TIME / 1000) AS DATE
+					) = cast(NOW() AS DATE)
+				OR cast(
+					FROM_UNIXTIME(PREV_FIRE_TIME / 1000) AS DATE
+				) = cast(NOW() AS DATE))
+				AND TRIGGER_NAME NOT in('triggerBatchUpdateEachDayJob', 'triggerCheckJobAndSendob','triggerRetryErrorJob','triggerRetryExpireJob')
+			)
+			AND JOB_ID IN(
+				SELECT
+					JOB_ID
+				FROM
+					cm_job J
+				LEFT JOIN cm_group G ON J.GROUP_ID = G.GROUP_ID
+				WHERE
+					J.IS_ENABLE = 1
+				AND J.IS_ONLINE = 1
+				AND G.IS_ENABLE = 1
+			)
+			AND to_days(U_DATE) != to_days(now())
+	</update>
+	
+	<delete id="cleanUpJobsState">
+		DELETE
+		FROM
+			cm_job_state
+		WHERE
+			job_id NOT IN (SELECT job_id FROM cm_job)
+		OR group_id NOT IN (SELECT group_id FROM cm_group)
+	</delete>
+	
+	<delete id="deleteGarbageRunJob" parameterType="int">
+		DELETE FROM cm_run_job WHERE JOB_ID=#{jobId} AND RUN_GROUP_ID NOT IN(SELECT cm_run_group.RUN_GROUP_ID FROM cm_run_group)
+	</delete>
+
+	<select id="getGarbageRunJob" resultMap="runJob">
+		SELECT
+				RJ.RUN_JOB_ID,
+				RJ.JOB_ID,
+				RJ.GROUP_ID,
+				RJ.STATE,
+				RJ.LOG_FILE,
+				RJ.SERVER_FILE,
+				RJ.EXECUTE_SERVER_ID,
+				RJ.MSG,
+				RJ.DEBUG_LEVEL,
+				RJ.RUN_VERSION,
+				APPEND_PARAMS,
+				RJ.RUN_PRIORITY,
+				RJ.ORDER_NO,
+				QUEUE_ID
+			FROM
+				CM_RUN_JOB RJ GROUP BY JOB_ID HAVING COUNT(JOB_ID) > 1
+	</select>
+
+	<resultMap type="com.meicloud.model.RunJob" id="runJobComplete">
+		<result property="runJobId" column="RUN_JOB_ID" jdbcType="INTEGER" javaType="int"/>
+		<result property="jobId" column="JOB_ID" jdbcType="INTEGER" javaType="int"/>
+		<result property="groupId" column="GROUP_ID" jdbcType="INTEGER" javaType="int"/>
+		<result property="state" column="STATE" jdbcType="INTEGER" javaType="int"/>
+	</resultMap>
+
+	<select id="getWaitingRunJobList" parameterType="com.meicloud.model.QueryParam" resultMap="runJob">
+		<![CDATA[
+	       SELECT
+				RJ.RUN_JOB_ID,
+				RJ.JOB_ID,
+				RJ.GROUP_ID,
+				RJ.STATE,
+				RJ.LOG_FILE,
+				RJ.SERVER_FILE,
+				RJ.EXECUTE_SERVER_ID,
+				RJ.MSG,
+				RJ.DEBUG_LEVEL,
+				RJ.RUN_VERSION,
+				APPEND_PARAMS,
+				RJ.RUN_PRIORITY,
+				RJ.ORDER_NO,
+				QUEUE_ID
+			FROM
+				CM_RUN_JOB RJ
+			WHERE
+				STATE = #{state}
+			AND RJ.DATE_LATEST_SEND IS NULL
+			ORDER BY
+				RJ.RUN_PRIORITY ASC
+			LIMIT 100
+	    ]]>
+	</select>
+
+	<select id="getCompleteRunJobListByGroupId" parameterType="java.lang.Integer" resultMap="runJobComplete">
+		<![CDATA[
+	       SELECT a.JOB_ID,a.GROUP_ID,a.STATE FROM cm_job_state a WHERE a.GROUP_ID in (SELECT b.REFERED_GROUP_ID FROM CM_GROUP_REFER b WHERE b.GROUP_ID = #{groupId}) 
+	       AND a.JOB_ID NOT in(SELECT j.JOB_ID FROM cm_job j WHERE j.IS_ONLINE = 0 OR j.IS_ENABLE = 0)
+	    ]]>
+	</select>
+	
+	<select id="getCompleteRunJobListByJobId" parameterType="java.lang.Integer" resultType="com.meicloud.model.RunJob">
+		<![CDATA[
+	       SELECT a.JOB_ID,a.GROUP_ID,a.STATE FROM cm_job_state a WHERE a.JOB_ID = (SELECT j.JOB_ID FROM cm_job j WHERE j.JOB_ID = #{jobId} AND (j.IS_ONLINE != 0 AND j.IS_ENABLE != 0))
+	    ]]>
+	</select>
+
+	<update id="updateListLatestSendDate" parameterType="java.util.List">
+		UPDATE CM_RUN_JOB
+		SET DATE_LATEST_SEND = NOW(),
+		MSG='UPDATE DATE_LATEST_SEND.'
+		<where>
+			RUN_JOB_ID IN
+			<foreach collection="ids" item="item" index="index" open="(" separator="," close=")">
+				#{item}
+			</foreach>
+		</where>
+	</update>
+	
+	<update id="updateListLatestSendDateIsNull" parameterType="java.util.List">
+		UPDATE CM_RUN_JOB
+		SET DATE_LATEST_SEND = NULL,
+		STATE=0,
+		MSG='UPDATE DATE_LATEST_SEND.'
+		<where>
+			RUN_JOB_ID IN
+			<foreach collection="ids" item="item" index="index" open="(" separator="," close=")">
+				#{item}
+			</foreach>
+		</where>
+	</update>
+
+	<update id="updateRejectListLatestSendDate" parameterType="java.util.List">
+		UPDATE CM_RUN_JOB
+		SET DATE_LATEST_SEND = NOW(),
+		STATE=4,
+		MSG='作业配置信息不满足跑数条件'
+		<where>
+			RUN_JOB_ID IN
+			<foreach collection="ids" item="item" index="index" open="(" separator="," close=")">
+				#{item}
+			</foreach>
+		</where>
+	</update>
+
+	<update id="updateState" parameterType="com.meicloud.model.RunJob">
+		UPDATE CM_RUN_JOB RJ,CM_JOB_STATE JS
+		SET RJ.STATE=#{state},
+		RJ.EXECUTE_SERVER_ID=#{executeServerId},
+		RJ.U_DATE=NOW(),
+		RJ.MSG=#{msg},
+		JS.STATE=#{state},
+		JS.U_DATE=NOW(),
+		JS.MSG=#{msg}
+		WHERE
+		RJ.JOB_ID=JS.JOB_ID
+		AND RJ.RUN_JOB_ID=#{runJobId}
+	</update>
+
+	<update id="updateStateAfterKill" parameterType="com.meicloud.model.KillJobParam">
+		UPDATE CM_RUN_JOB RJ,
+		cm_job_state JS
+		SET RJ.STATE = #{state},
+		RJ.MSG = #{msg},
+		RJ.ERROR_RETRYED_COUNT = #{errorRetryedCount},
+		RJ.U_DATE = NOW(),
+		JS.STATE = #{state},
+		JS.U_DATE = NOW(),
+		JS.MSG = #{msg}
+		WHERE
+		RJ.JOB_ID = JS.JOB_ID
+		AND RJ.RUN_JOB_ID=#{runJobId}
+	</update>
+
+	<resultMap type="com.meicloud.model.GroupParalle" id="groupParalle">
+		<result property="groupId" column="GROUP_ID" jdbcType="INTEGER" javaType="int"/>
+		<result property="jobNumInQueueOrRunning" column="IN_QUEUE_OR_RUNNING" jdbcType="INTEGER" javaType="int"/>
+		<result property="paralleLimit" column="PARALLE_LIMIT" jdbcType="INTEGER" javaType="int"/>
+	</resultMap>
+
+	<select id="getGroupParalle" parameterType="com.meicloud.model.QueryParam" resultMap="groupParalle">
+		<![CDATA[
+	  	SELECT
+			T1.GROUP_ID AS GROUP_ID,
+			T1.PARALLE_LIMIT AS PARALLE_LIMIT,
+			IFNULL(T2.CN, 0) AS IN_QUEUE_OR_RUNNING
+		FROM
+			(
+				SELECT
+					G.GROUP_ID AS GROUP_ID,
+					G.PARALLEL_LIMIT AS PARALLE_LIMIT
+				FROM
+					cm_run_group G
+				WHERE
+					INSTR(
+						#{msg},
+						G.GROUP_ID
+					)
+			) T1
+		LEFT JOIN (
+			SELECT
+				J.GROUP_ID AS GROUP_ID,
+				COUNT(DISTINCT J.JOB_ID) AS CN
+			FROM
+				cm_run_job J
+			WHERE
+				INSTR(
+					#{msg},
+					J.GROUP_ID
+				)
+			AND (J.STATE = #{watingCheckState} OR J.STATE = #{watingState} OR J.STATE = #{runningState})
+			AND J.DATE_LATEST_SEND IS NOT NULL
+			GROUP BY
+				J.GROUP_ID
+		) T2 ON T1.GROUP_ID = T2.GROUP_ID
+	  ]]>
+	</select>
+
+	<select id="getRunJobCountByStateAndQueueId" parameterType="com.meicloud.model.RunJob" resultType="java.lang.Integer">
+		SELECT COUNT(1) as sum FROM cm_job_state state WHERE state.STATE = #{state} AND state.GROUP_ID in( SELECT cm_group.GROUP_ID FROM cm_group WHERE cm_group.QUEUE_ID = #{queueId})
+	</select>
+
+
+	<insert id="add" parameterType="com.meicloud.model.RunJob" keyProperty="runJobId">
+		<selectKey resultType="int" keyProperty="runJobId" order="AFTER" >
+			SELECT LAST_INSERT_ID() AS runJobId
+		</selectKey>
+		insert into CM_RUN_JOB (
+		RUN_GROUP_ID,
+		JOB_ID,
+		GROUP_ID,
+		STATE,
+		SERVER_FILE,
+		LOG_FILE,
+		ORDER_NO,
+		DEBUG_LEVEL,
+		C_DATE,
+		U_DATE,
+		R_IS_TIME,
+		R_TIMEOUT,
+		R_IS_ERROR,
+		R_INTERVAL_TIME,
+		R_ERROR_INTERVAL_NUM,
+		R_TIMEOUT_INTERVAL_NUM,
+		ERROR_RETRYED_COUNT,
+		TIMEOUT_RETRYED_COUNT,
+		RUN_VERSION,
+		MSG,
+		APPEND_PARAMS,
+		EXECUTE_SERVER_ID,
+		QUEUE_ID
+		) VALUES(
+		#{runGroupId,jdbcType=INTEGER},
+		#{jobId,jdbcType=INTEGER},
+		#{groupId,jdbcType=INTEGER},
+		#{state,jdbcType=INTEGER},
+		#{serverFile,jdbcType=VARCHAR},
+		#{logFile,jdbcType=VARCHAR},
+		#{orderNo,jdbcType=INTEGER},
+		#{debugLevel,jdbcType=VARCHAR},
+		NOW(),
+		NOW(),
+		#{rIsTime,jdbcType=TINYINT},
+		#{rTimeout,jdbcType=INTEGER},
+		#{rIsError,jdbcType=TINYINT},
+		#{rIntervalTime,jdbcType=INTEGER},
+		#{rErrorIntervalNum,jdbcType=INTEGER},
+		#{rTimeoutIntervalNum,jdbcType=INTEGER},
+		0,
+		0,
+		#{runVersion,jdbcType=INTEGER},
+		#{msg,jdbcType=VARCHAR},
+		#{appendParams,jdbcType=VARCHAR},
+		#{executeServerId,jdbcType=TINYINT},
+		#{queueId,jdbcType=VARCHAR})
+	</insert>
+
+	<select id="getRunJobByJobId" parameterType="int" resultMap="runJob">
+		<![CDATA[
+	  	SELECT
+			rj.RUN_JOB_ID,
+			rj.RUN_VERSION,
+			rj.RUN_GROUP_ID,
+			rj.JOB_ID,
+			rj.GROUP_ID,
+			rj.EXECUTE_SERVER_ID,
+			rj.STATE,
+			rj.SERVER_FILE,
+			rj.LOG_FILE,
+			rj.ORDER_NO,
+			rj.DEBUG_LEVEL,
+			rj.C_DATE,
+			rj.U_DATE,
+			rj.R_IS_TIME,
+			rj.R_TIMEOUT,
+			rj.R_IS_ERROR,
+			rj.R_INTERVAL_TIME,
+			rj.R_ERROR_INTERVAL_NUM,
+			rj.R_TIMEOUT_INTERVAL_NUM,
+			rj.DATE_LATEST_SEND,
+			rj.ERROR_RETRYED_COUNT,
+			rj.TIMEOUT_RETRYED_COUNT,
+			rj.MSG,
+			es.IP,
+			rj.APPEND_PARAMS,
+			rj.QUEUE_ID
+		FROM
+			cm_run_job rj LEFT JOIN cm_server es on rj.EXECUTE_SERVER_ID=es.ID
+		WHERE
+			rj.JOB_ID = #{jobId}
+		ORDER BY
+			rj.RUN_JOB_ID DESC
+		LIMIT 1
+	   ]]>
+	</select>
+
+	<select id="formRunJobByJobId" parameterType="int" resultType="com.meicloud.model.RunJob">
+		<![CDATA[
+	  	SELECT
+			J.JOB_ID as jobId,
+			J.GROUP_ID as groupId,
+			J.SERVER_FILE as serverFile,
+			J.LOG_FILE as logFile,
+			J.ORDER_NO as orderNo,
+			J.DEBUG_LEVEL as debugLevel,
+			J.C_DATE as createDate,
+			J.U_DATE as updateDate,
+			J.APPEND_PARAMS as appendParams,
+			G.QUEUE_ID as queueId,
+			R.R_IS_TIME as rIsTime,
+			R.R_TIMEOUT as rTimeout,
+			R.R_IS_ERROR as rIsError,
+			R.R_INTERVAL_TIME as rIntervalTime,
+			R.R_ERROR_INTERVAL_NUM as rErrorIntervalNum,
+			J.EXECUTE_SERVER_ID as executeServerId,
+			R.R_TIMEOUT_INTERVAL_NUM as rTimeoutIntervalNum
+		FROM
+			cm_job J
+		LEFT JOIN cm_job_retry_rule R ON J.RETRY_ID = R.RETRY_ID
+		LEFT JOIN cm_group g on J.GROUP_ID=G.GROUP_ID
+		WHERE
+			JOB_ID = #{jobId}
+		ORDER BY
+			J.JOB_ID DESC
+		LIMIT 1
+	   ]]>
+	</select>
+
+	<select id="getJobsByGroupId" parameterType="com.meicloud.model.JobPusherParam" resultMap="runJob">
+		<![CDATA[
+	  	SELECT
+			RJ.RUN_JOB_ID,
+			RJ.RUN_VERSION,
+			RJ.RUN_GROUP_ID,
+			RJ.JOB_ID,
+			RJ.GROUP_ID,
+			RJ.EXECUTE_SERVER_ID,
+			RJ.STATE,
+			RJ.SERVER_FILE,
+			RJ.LOG_FILE,
+			RJ.ORDER_NO,
+			RJ.DEBUG_LEVEL,
+			RJ.C_DATE,
+			RJ.U_DATE,
+			RJ.R_IS_TIME,
+			RJ.R_TIMEOUT,
+			RJ.R_IS_ERROR,
+			RJ.R_INTERVAL_TIME,
+			RJ.R_ERROR_INTERVAL_NUM,
+			RJ.R_TIMEOUT_INTERVAL_NUM,
+			RJ.DATE_LATEST_SEND,
+			RJ.ERROR_RETRYED_COUNT,
+			RJ.TIMEOUT_RETRYED_COUNT,
+			RJ.MSG,
+			RJ.APPEND_PARAMS,
+			ES.IP
+		FROM
+			CM_RUN_JOB RJ LEFT JOIN CM_SERVER ES ON RJ.EXECUTE_SERVER_ID=ES.ID
+		WHERE
+		  RJ.GROUP_ID=#{groupId}
+	   ]]>
+	</select>
+
+	<select id="getRunGroupId" parameterType="int" resultType="java.lang.Integer">
+		<![CDATA[
+	  	SELECT
+			IFNULL(MAX(RUN_GROUP_ID),0)
+		FROM
+			CM_RUN_GROUP
+		WHERE
+			GROUP_ID = #{groupId}
+	  ]]>
+	</select>
+
+	<update id="updateJobState" parameterType="com.meicloud.model.RunJob">
+		UPDATE CM_JOB_STATE
+		SET STATE = #{state},
+		MSG = #{msg},
+		U_DATE = NOW()
+		WHERE
+		JOB_ID = #{jobId}
+	</update>
+
+	<update id="updateJobGroupState" parameterType="com.meicloud.model.RunJob">
+		UPDATE CM_JOB_STATE
+		SET
+		GROUP_ID = #{groupId},
+		U_DATE = NOW()
+		WHERE
+		JOB_ID = #{jobId}
+	</update>
+
+	<update id="updateRunJobState2ErrorFromWaitingOrRunning" parameterType="com.meicloud.model.JobPusherParam">
+		<![CDATA[
+	    UPDATE CM_RUN_JOB
+		SET
+			STATE=#{errorState},
+			U_DATE=NOW(),
+			MSG=#{msg},
+			DATE_LATEST_SEND=null
+		WHERE
+			RUN_JOB_ID=#{runJobId}
+			AND (STATE=#{watingState} OR STATE=#{watingCheckState} OR STATE=#{runningState})
+	   ]]>
+	</update>
+
+	<update id="updateRunJobListState2ErrorFromWaitingOrRunning" parameterType="com.meicloud.model.JobPusherParam">
+		<![CDATA[
+	    UPDATE CM_RUN_JOB
+		SET
+			STATE=#{errorState},
+			U_DATE=NOW(),
+			MSG=#{msg},
+			DATE_LATEST_SEND=null
+		WHERE
+			GROUP_ID=#{groupId}
+			AND (STATE=#{watingState} OR STATE=#{watingCheckState} OR STATE=#{runningState})
+	   ]]>
+	</update>
+
+	<update id="updateRunJobState2CancelFromError" parameterType="com.meicloud.model.JobPusherParam">
+		<![CDATA[
+	    UPDATE CM_RUN_JOB
+		SET
+			STATE=#{cancelState},
+			U_DATE=NOW(),
+			MSG=#{msg}
+		WHERE
+			JOB_ID=#{jobId}
+			AND STATE=#{errorState}
+	   ]]>
+	</update>
+
+	<update id="updateRunJobListState2CancelFromError" parameterType="com.meicloud.model.JobPusherParam">
+		<![CDATA[
+	    UPDATE CM_RUN_JOB
+		SET
+			STATE=#{cancelState},
+			U_DATE=NOW(),
+			MSG=#{msg}
+		WHERE
+			GROUP_ID=#{groupId}
+			AND STATE=#{errorState}
+	   ]]>
+	</update>
+
+	<update id="updateDateLatestSend" parameterType="int">
+		<![CDATA[
+	    UPDATE
+	    CM_RUN_JOB set
+			DATE_LATEST_SEND=NOW()
+		WHERE
+		    RUN_JOB_ID=#{runJobId}
+	   ]]>
+	</update>
+
+	<update id="updateRunVersionByGroup" parameterType="int">
+		<![CDATA[
+	    UPDATE
+	    CM_RUN_JOB set
+			RUN_VERSION = RUN_VERSION + 1,
+			R_ERROR_INTERVAL_NUM=0,
+			R_TIMEOUT_INTERVAL_NUM=0
+		WHERE
+		    RUN_GROUP_ID = #{runGroupId}
+	   ]]>
+	</update>
+
+	<update id="updateRunVersionByJob" parameterType="int">
+		<![CDATA[
+	    UPDATE
+	    CM_RUN_JOB set
+			RUN_VERSION = RUN_VERSION + 1,
+			R_ERROR_INTERVAL_NUM=0,
+			R_TIMEOUT_INTERVAL_NUM=0,
+			STATE=3
+		WHERE
+		    RUN_JOB_ID=#{runJobId}
+	   ]]>
+	</update>
+
+	<select id="pushGroupRefer2RunTime" statementType="CALLABLE" resultType="java.lang.Integer" parameterType="com.meicloud.model.JobPusherParam">
+		<![CDATA[
+        {call SP_PUSH_GROUP(
+	        	#{groupId,mode=IN,jdbcType=INTEGER},
+	        	#{referedGroupIds,mode=IN,jdbcType=VARCHAR},
+	        	#{referedJobIds,mode=IN,jdbcType=VARCHAR},
+	        	#{pushType,mode=IN,jdbcType=TINYINT}
+        	)
+        }
+    	]]>
+	</select>
+
+	<select id="pushJob2RunTime" statementType="CALLABLE" resultType="java.lang.Integer" parameterType="com.meicloud.model.JobPusherParam">
+		<![CDATA[
+        {call SP_PUSH_JOB(
+        	#{groupId,mode=IN,jdbcType=INTEGER},
+        	#{runGroupId,mode=IN,jdbcType=INTEGER},
+        	#{watingCheckState,mode=IN,jdbcType=INTEGER},
+        	#{msg,mode=IN,jdbcType=VARCHAR}
+        	)
+        }
+    	]]>
+	</select>
+
+	<select id="pushJob2RunTimeHandle" statementType="CALLABLE" resultType="java.lang.Integer" parameterType="com.meicloud.model.JobPusherParam">
+		<![CDATA[
+        {call SP_PUSH_JOB_HANDLE(
+        	#{groupId,mode=IN,jdbcType=INTEGER},
+        	#{runGroupId,mode=IN,jdbcType=INTEGER},
+        	#{watingCheckState,mode=IN,jdbcType=INTEGER},
+        	#{msg,mode=IN,jdbcType=VARCHAR}
+        	)
+        }
+    	]]>
+	</select>
+
+	<select id="hasRunningJobsInRunTime" parameterType="com.meicloud.model.JobPusherParam" resultType="boolean">
+		<![CDATA[
+        SELECT
+			CASE
+		WHEN (
+			SELECT
+				COUNT(RJ.JOB_ID)
+			FROM
+				CM_RUN_JOB RJ
+			WHERE
+				RJ.GROUP_ID = #{groupId}
+			AND RJ.STATE = #{runningState}
+		) > 0 THEN
+			1
+		ELSE
+			0
+		END
+      ]]>
+	</select>
+	<!-- AND DATE_FORMAT(NOW(), '%Y%m%d') = DATE_FORMAT(RJ.C_DATE, '%Y%m%d') -->
+
+	<select id="getRunJobUpSeconds" parameterType="int" resultType="java.lang.Integer">
+		<![CDATA[
+      	SELECT
+			TIMESTAMPDIFF(SECOND, MAX(RJ.U_DATE), NOW()) AS UP_SECONDS
+		FROM
+			CM_RUN_JOB RJ
+		WHERE
+			RJ.JOB_ID = #{jobId}
+      ]]>
+	</select>
+
+	<select id="getRunGroupUpSeconds" parameterType="int" resultType="java.lang.Integer">
+		<![CDATA[
+      	SELECT
+			TIMESTAMPDIFF(SECOND, MAX(RG.U_DATE), NOW()) AS UP_SECONDS
+		FROM
+			CM_RUN_GROUP RG
+		WHERE
+			RG.GROUP_ID = #{groupId}
+      ]]>
+	</select>
+
+	<delete id="delete" parameterType="int">
+		DELETE FROM cm_run_job WHERE JOB_ID=#{jobId}
+	</delete>
+	
+	<delete id="deleteByRunJobId" parameterType="int">
+		DELETE FROM cm_run_job WHERE RUN_JOB_ID=#{runJobId}
+	</delete>
+	
+	<delete id="deleteByGroupId" parameterType="int">
+		DELETE FROM cm_run_job WHERE GROUP_ID=#{groupId}
+	</delete>
+
+	<insert id="copy2His" parameterType="int">
+		<![CDATA[
+       	INSERT INTO cm_run_job_his (
+			RUN_JOB_ID,
+			RUN_GROUP_ID,
+			JOB_ID,
+			GROUP_ID,
+			EXECUTE_SERVER_ID,
+			STATE,
+			SERVER_FILE,
+			LOG_FILE,
+			ORDER_NO,
+			DEBUG_LEVEL,
+			C_DATE,
+			U_DATE,
+			R_IS_TIME,
+			R_TIMEOUT,
+			R_IS_ERROR,
+			R_INTERVAL_TIME,
+			R_ERROR_INTERVAL_NUM,
+			R_TIMEOUT_INTERVAL_NUM,
+			DATE_LATEST_SEND,
+			ERROR_RETRYED_COUNT,
+			TIMEOUT_RETRYED_COUNT,
+			MSG,
+			RUN_VERSION,
+			APPEND_PARAMS,
+			NOTICE_DATE,
+			QUEUE_ID
+		) SELECT
+			RUN_JOB_ID,
+			RUN_GROUP_ID,
+			JOB_ID,
+			GROUP_ID,
+			EXECUTE_SERVER_ID,
+			STATE,
+			SERVER_FILE,
+			LOG_FILE,
+			ORDER_NO,
+			DEBUG_LEVEL,
+			C_DATE,
+			U_DATE,
+			R_IS_TIME,
+			R_TIMEOUT,
+			R_IS_ERROR,
+			R_INTERVAL_TIME,
+			R_ERROR_INTERVAL_NUM,
+			R_TIMEOUT_INTERVAL_NUM,
+			DATE_LATEST_SEND,
+			ERROR_RETRYED_COUNT,
+			TIMEOUT_RETRYED_COUNT,
+			MSG,
+			RUN_VERSION,
+			APPEND_PARAMS,
+			NOTICE_DATE,
+			QUEUE_ID
+		FROM
+			cm_run_job
+		WHERE
+			JOB_ID = #{jobId}
+       ]]>
+	</insert>
+	
+	<insert id="copy2HisByGroupId" parameterType="int">
+		<![CDATA[
+		       	INSERT INTO CM_RUN_JOB_HIS (
+				RUN_JOB_ID,
+				RUN_GROUP_ID,
+				JOB_ID,
+				GROUP_ID,
+				EXECUTE_SERVER_ID,
+				STATE,
+				SERVER_FILE,
+				LOG_FILE,
+				ORDER_NO,
+				DEBUG_LEVEL,
+				C_DATE,
+				U_DATE,
+				MSG,
+				R_IS_TIME,
+				R_TIMEOUT,
+				R_IS_ERROR,
+				R_INTERVAL_TIME,
+				R_ERROR_INTERVAL_NUM,
+				R_TIMEOUT_INTERVAL_NUM,
+				DATE_LATEST_SEND,
+				ERROR_RETRYED_COUNT,
+				TIMEOUT_RETRYED_COUNT,
+				APPEND_PARAMS,
+				RUN_PRIORITY,
+				NOTICE_DATE,
+				QUEUE_ID
+			)(
+				SELECT
+					RUN_JOB_ID,
+					RUN_GROUP_ID,
+					JOB_ID,
+					GROUP_ID,
+					EXECUTE_SERVER_ID,
+					STATE,
+					SERVER_FILE,
+					LOG_FILE,
+					ORDER_NO,
+					DEBUG_LEVEL,
+					C_DATE,
+					U_DATE,
+					MSG,
+					R_IS_TIME,
+					R_TIMEOUT,
+					R_IS_ERROR,
+					R_INTERVAL_TIME,
+					R_ERROR_INTERVAL_NUM,
+					R_TIMEOUT_INTERVAL_NUM,
+					DATE_LATEST_SEND,
+					ERROR_RETRYED_COUNT,
+					TIMEOUT_RETRYED_COUNT,
+					APPEND_PARAMS,
+					RUN_PRIORITY,
+					NOTICE_DATE,
+					QUEUE_ID
+				FROM
+					CM_RUN_JOB
+				WHERE
+					GROUP_ID = #{groupId}
+			)
+       ]]>
+	</insert>	
+	
+	<insert id="addByGroup" parameterType="com.meicloud.model.JobPusherParam">
+		<![CDATA[
+       	INSERT INTO CM_RUN_JOB (
+			RUN_GROUP_ID,
+			JOB_ID,
+			GROUP_ID,
+			STATE,
+			SERVER_FILE,
+			LOG_FILE,
+			ORDER_NO,
+			DEBUG_LEVEL,
+			C_DATE,
+			U_DATE,
+			MSG,
+			R_IS_TIME,
+			R_TIMEOUT,
+			R_IS_ERROR,
+			R_INTERVAL_TIME,
+			R_ERROR_INTERVAL_NUM,
+			R_TIMEOUT_INTERVAL_NUM,
+			ERROR_RETRYED_COUNT,
+			TIMEOUT_RETRYED_COUNT,
+			APPEND_PARAMS,
+			RUN_PRIORITY,
+			EXECUTE_SERVER_ID,
+			QUEUE_ID
+		)
+			SELECT
+				#{runGroupId},
+				J.JOB_ID,
+				J.GROUP_ID,
+				#{watingCheckState},
+				J.SERVER_FILE,
+				J.LOG_FILE,
+				J.ORDER_NO,
+				J.DEBUG_LEVEL,
+				NOW(),
+				NULL,
+				#{msg},
+				R.R_IS_TIME,
+				R.R_TIMEOUT,
+				R.R_IS_ERROR,
+				R.R_INTERVAL_TIME,
+				R.R_ERROR_INTERVAL_NUM,
+				R.R_TIMEOUT_INTERVAL_NUM,
+				0,
+				0,
+				J.APPEND_PARAMS,
+				J.RUN_PRIORITY,
+				J.EXECUTE_SERVER_ID,
+				G.QUEUE_ID
+			FROM
+				cm_job J
+			LEFT JOIN cm_job_retry_rule R ON J.RETRY_ID = R.RETRY_ID
+			LEFT JOIN cm_group G ON J.GROUP_ID = G.GROUP_ID
+			WHERE
+				J.IS_ENABLE = 1
+			AND G.IS_ENABLE = 1
+			AND IS_ONLINE = 1
+			AND J.GROUP_ID = #{groupId}
+       ]]>
+	</insert>
+	
+	<update id="updateJobStateBySatrt" parameterType="com.meicloud.model.JobPusherParam">
+		UPDATE cm_job_state
+		SET STATE = #{watingCheckState},
+		 MSG = #{msg},
+		 U_DATE = NOW()
+		WHERE
+			JOB_ID IN (
+				SELECT
+					JOB_ID
+				FROM
+					cm_job J
+				LEFT JOIN cm_group G ON J.GROUP_ID = G.GROUP_ID
+				WHERE
+					J.IS_ENABLE = 1
+				AND G.IS_ENABLE = 1
+				AND IS_ONLINE = 1
+				AND J.GROUP_ID = #{groupId}
+			)
+	</update>
+	
+	<update id="updateJobStateBySatrtAndJobid" parameterType="com.meicloud.model.JobPusherParam">
+		UPDATE cm_job_state
+		SET STATE = #{watingCheckState},
+		 MSG = #{msg},
+		 U_DATE = NOW()
+		WHERE
+			JOB_ID = #{jobId}
+	</update>
+	
+	<select id="getRunJobCountByGroupId" parameterType="int" resultType="java.lang.Integer">
+		<![CDATA[
+      	SELECT
+			COUNT(1) AS CN
+		FROM
+			CM_RUN_JOB
+		WHERE
+			GROUP_ID = #{groupId}
+      ]]>
+	</select>
+
+	<insert id="addConfirm" parameterType="com.meicloud.model.RunConfirm">
+		<![CDATA[
+	      {call SP_CONFIRM_RUN_GROUP(
+	      	#{frontGroupId,mode=IN,jdbcType=INTEGER},
+	      	#{frontGroupName,mode=IN,jdbcType=VARCHAR},
+	      	#{createAccount,mode=IN,jdbcType=VARCHAR},
+	      	#{msg,mode=IN,jdbcType=VARCHAR}
+	      	)
+	      }
+	   ]]>
+	</insert>
+	
+	<insert id="addConfirmSQL" parameterType="com.meicloud.model.RunConfirm">
+		<![CDATA[
+	      INSERT INTO cm_run_job_confirm (
+				POST_GROUP_NAME,
+				U_ACCOUNT,
+				FRONT_GROUP_NAME,
+				C_ACCOUNT,
+				C_DATE,
+				U_DATE,
+				MSG
+			)
+			SELECT DISTINCT
+				G.G_NAME,
+				C.`NAME`,
+				#{frontGroupName},
+				#{createAccount},
+				NOW(),
+				NULL,
+				#{msg}
+			FROM
+				cm_group G
+			LEFT JOIN cm_job J ON G.GROUP_ID = J.GROUP_ID
+			LEFT JOIN cm_chargor C ON J.CHARGOR_ID = C.ID
+			WHERE
+				G.GROUP_ID IN (
+					SELECT
+						GROUP_ID
+					FROM
+						cm_group_refer
+					WHERE
+						REFERED_GROUP_ID = #{frontGroupId}
+				)
+	   ]]>
+	</insert>
+
+	<select id="runConfirmList" resultMap="runConfirm">
+		SELECT
+		C.CONFIRM_ID,
+		C.FRONT_GROUP_NAME,
+		C.POST_GROUP_NAME,
+		C.C_ACCOUNT,
+		C.U_ACCOUNT,
+		C.C_DATE,
+		C.U_DATE,
+		C.MSG
+		FROM
+		cm_run_job_confirm C
+		LEFT JOIN cm_account A ON C.U_ACCOUNT = A.REAL_NAME
+		<where>
+			1=1
+			<if test="account != null and account != ''">
+				and  A.ACCOUNT = #{account}
+			</if>
+			<if test="filter == 0">
+				AND C.U_DATE IS NOT NULL
+			</if>
+			<if test="filter == 1">
+				AND C.U_DATE IS NULL
+			</if>
+		</where>
+		ORDER BY C_DATE DESC
+	</select>
+
+	<update id="confirmJob" >
+		<![CDATA[
+	    UPDATE CM_RUN_JOB_CONFIRM
+		SET
+			U_DATE = NOW()
+		WHERE
+			CONFIRM_ID = #{confirmId}
+	   ]]>
+	</update>
+
+	<select id="checkRunJob"  resultType="int">
+		SELECT
+		count(rj.RUN_JOB_ID) as jobs
+		FROM
+		cm_run_job rj
+		WHERE
+		rj.GROUP_ID IN(#{groupId},#{oldGroupId})
+		AND rj.STATE in(0,1,2)
+	</select>
+	
+	<select id="runningCount" parameterType="int" resultType="int">
+	   <![CDATA[
+	   		SELECT
+				count(*)
+			FROM
+				cm_run_job
+			WHERE
+				JOB_ID = #{jobId}
+				AND STATE = 2
+	   ]]>
+	</select>
+	
+	<select id="getByRunJobId" parameterType="int" resultMap="runJob">
+	   <![CDATA[
+	   		SELECT
+				RUN_JOB_ID,
+				JOB_ID,
+				STATE,
+				SERVER_FILE,
+				LOG_FILE,
+				RUN_VERSION,
+				APPEND_PARAMS,
+				R_ERROR_INTERVAL_NUM,
+				R_TIMEOUT_INTERVAL_NUM,
+				EXECUTE_SERVER_ID
+			FROM
+				cm_run_job
+			where RUN_JOB_ID=#{runJobId}
+			limit 1
+	   ]]>
+	</select>
+	
+	<select id="getByJobId" parameterType="int" resultMap="runJob">
+	   <![CDATA[
+	   		SELECT
+				RUN_JOB_ID,
+				JOB_ID,
+				STATE,
+				SERVER_FILE,
+				LOG_FILE,
+				RUN_VERSION,
+				APPEND_PARAMS,
+				R_ERROR_INTERVAL_NUM,
+				R_TIMEOUT_INTERVAL_NUM,
+				EXECUTE_SERVER_ID
+			FROM
+				cm_run_job
+			where JOB_ID=#{jobId}
+			limit 1
+	   ]]>
+	</select>
+	
+	<select id="checkIfExists" parameterType="com.meicloud.model.RunJob" resultType="boolean">
+		<![CDATA[
+		    SELECT
+				CASE
+			WHEN COUNT(RUN_JOB_ID) > 0 THEN
+				1
+			ELSE
+				0
+			END AS CN
+			FROM
+				cm_run_job
+			WHERE
+				RUN_JOB_ID = #{runJobId}
+				AND RUN_VERSION=#{runVersion}
+		]]>
+	</select>
+	
+</mapper> 

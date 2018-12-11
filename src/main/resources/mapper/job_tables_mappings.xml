@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.meicloud.dao.JobTablesMapper">
+
+	<resultMap id="jobTables" type="com.meicloud.model.JobTables">
+		<result property="id" column="ID" jdbcType="INTEGER" javaType="int" />
+		<result property="jobId" column="JOB_ID" jdbcType="INTEGER" javaType="int" />
+		<result property="databaseName" column="DB_NAME" jdbcType="VARCHAR" javaType="java.lang.String" />
+		<result property="tableName" column="TB_NAME" jdbcType="VARCHAR" javaType="java.lang.String" />
+		<result property="desc" column="DESC" jdbcType="VARCHAR" javaType="java.lang.String" />
+		<result property="version" column="VERSION" jdbcType="INTEGER" javaType="int" />
+		<result property="enable" column="IS_ENABLE" jdbcType="TINYINT" javaType="boolean" />
+		<result property="createDate" column="C_DATE" jdbcType="TIMESTAMP" javaType="java.util.Date" />
+		<result property="updateDate" column="U_DATE" jdbcType="TIMESTAMP" javaType="java.util.Date" />
+		<result property="createUser" column="C_USER" jdbcType="VARCHAR" javaType="java.lang.String" />
+		<result property="updateUser" column="U_USER" jdbcType="VARCHAR" javaType="java.lang.String" />
+	    <result property="type" column="TYPE" jdbcType="INTEGER" javaType="int" />
+	</resultMap>
+
+	<insert id="add" parameterType="com.meicloud.model.JobTables" keyProperty="id">
+		<selectKey resultType="int" keyProperty="id" order="AFTER">
+			SELECT LAST_INSERT_ID() AS id
+		</selectKey>
+		INSERT INTO cm_job_tables (
+			JOB_ID,
+			DB_NAME,
+			TB_NAME,
+			VERSION,
+			`DESC`,
+			IS_ENABLE,
+			C_DATE,
+			U_DATE,
+			C_USER,
+			U_USER,
+			TYPE
+		)
+		VALUES
+		(
+			#{jobId},
+			#{databaseName},
+			#{tableName},
+			#{version},
+			#{desc},
+			#{enable},
+			NOW(),
+			NOW(),
+			#{createUser},
+			#{updateUser},
+			#{type}
+		)
+	</insert>
+
+	<update id="update" parameterType="com.meicloud.model.JobTables">
+	<![CDATA[
+		update cm_job_tables set
+			JOB_ID=#{jobId},
+			DB_NAME=#{databaseName},
+			TB_NAME=#{tableName},
+			VERSION=#{version},
+			`DESC`=#{desc},
+			IS_ENABLE=#{enable},			
+			U_DATE=NOW(),			
+			U_USER=#{updateUser},
+			TYPE=#{type}
+		where 
+		    ID=#{id}
+	]]>
+	</update>
+	
+	<delete id="delete" parameterType="int">
+		delete from CM_JOB_TABLES where
+		ID=#{id}
+	</delete>
+	
+	<delete id="deleteByJobId" parameterType="int">
+		delete from CM_JOB_TABLES where JOB_ID=#{jobId}
+	</delete>
+	
+	<select id="getById" parameterType="int" resultMap="jobTables">
+	<![CDATA[
+		SELECT
+			ID,
+			JOB_ID,
+			DB_NAME,
+			TB_NAME,
+			`DESC`,
+			VERSION,
+			IS_ENABLE,
+			C_DATE,
+			U_DATE,
+			C_USER,
+			U_USER,
+			TYPE
+		FROM
+			cm_job_tables
+		WHERE ID=#{id}
+	 ]]>
+	</select>
+
+	<select id="getByJobId" parameterType="int" resultMap="jobTables">
+	   <![CDATA[
+	 		SELECT
+			ID,
+			JOB_ID,
+			DB_NAME,
+			TB_NAME,
+			`DESC`,
+			VERSION,
+			IS_ENABLE,
+			C_DATE,
+			U_DATE,
+			C_USER,
+			U_USER,
+			TYPE
+		FROM
+			cm_job_tables
+		WHERE JOB_ID=#{jobId}
+		ORDER BY TYPE,U_DATE DESC
+	   ]]>
+	</select>
+	
+	<!-- 检查是否同名 -->
+	<select id="checkIfExists4New" parameterType="com.meicloud.model.JobTables" resultType="int">
+	   <![CDATA[
+	     select count(1) from cm_job_tables where DB_NAME = #{databaseName} and TB_NAME = #{tableName} and TYPE=#{type} and JOB_ID = #{jobId}
+	   ]]>
+	</select>
+	
+	<!-- 检查是否同名 -->
+	<select id="checkIfExists4Update" parameterType="com.meicloud.model.JobTables" resultType="int">
+	   <![CDATA[
+	     select count(1) from cm_job_tables where DB_NAME = #{databaseName} and TB_NAME = #{tableName} and JOB_ID = #{jobId} and TYPE=#{type} and ID <> #{id}
+	   ]]>
+	</select>
+	
+</mapper> 

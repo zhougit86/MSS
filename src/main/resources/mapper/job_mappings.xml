@@ -1,0 +1,925 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.meicloud.dao.JobMapper">
+
+	<resultMap id="job" type="com.meicloud.model.Job">
+		<result property="jobId" column="JOB_ID" jdbcType="INTEGER" javaType="java.lang.Integer" />
+		<result property="orderNo" column="ORDER_NO" jdbcType="INTEGER" javaType="java.lang.Integer" />
+		<result property="runPriority" column="RUN_PRIORITY" jdbcType="INTEGER" javaType="java.lang.Integer" />
+		<result property="groupId" column="GROUP_ID" jdbcType="INTEGER" javaType="java.lang.Integer" />
+		<result property="chargorId" column="CHARGOR_ID" jdbcType="INTEGER" javaType="java.lang.Integer" />
+		<result property="chargorId2" column="CHARGOR_ID2" jdbcType="INTEGER" javaType="java.lang.Integer" />
+		<result property="chargorId3" column="CHARGOR_ID3" jdbcType="INTEGER" javaType="java.lang.Integer" />
+		<result property="jobName" column="JOB_NAME" jdbcType="VARCHAR" javaType="java.lang.String" />
+		<result property="logFile" column="LOG_FILE" jdbcType="VARCHAR" javaType="java.lang.String" />
+		<result property="serverFile" column="SERVER_FILE" jdbcType="VARCHAR" javaType="java.lang.String" />
+		<result property="svnFile" column="SVN_FILE" jdbcType="VARCHAR" javaType="java.lang.String" />
+		<result property="enable" column="IS_ENABLE" jdbcType="TINYINT" javaType="boolean" />
+		<result property="createDate" column="C_DATE" jdbcType="TIMESTAMP" javaType="java.util.Date" />
+		<result property="updateDate" column="U_DATE" jdbcType="TIMESTAMP" javaType="java.util.Date" />
+		<result property="groupName" column="G_NAME" jdbcType="VARCHAR" javaType="java.lang.String" />
+		<result property="execTime" column="EXEC_TIME" jdbcType="INTEGER" javaType="java.lang.Integer" />
+		<result property="chargorName" column="NAME" jdbcType="VARCHAR" javaType="java.lang.String" />
+		<result property="chargorName2" column="NAME2" jdbcType="VARCHAR" javaType="java.lang.String" />
+		<result property="chargorName3" column="NAME3" jdbcType="VARCHAR" javaType="java.lang.String" />
+		<result property="execState" column="EXEC_STATE" jdbcType="VARCHAR" javaType="java.lang.String" />
+		<result property="startDate" column="START_DATE" jdbcType="TIMESTAMP" javaType="java.util.Date" />
+		<result property="endDate" column="END_DATE" jdbcType="TIMESTAMP" javaType="java.util.Date" />
+		<result property="retryId" column="RETRY_ID" jdbcType="INTEGER" javaType="java.lang.Integer" />
+		<result property="cUser" column="C_USER" jdbcType="VARCHAR" javaType="java.lang.String" />
+		<result property="uUser" column="U_USER" jdbcType="VARCHAR" javaType="java.lang.String" />
+		<result property="debugLevel" column="DEBUG_LEVEL" jdbcType="VARCHAR" javaType="java.lang.String" />
+		<result property="online" column="IS_ONLINE" jdbcType="TINYINT"	javaType="boolean" />
+		<result property="appendParams" column="APPEND_PARAMS" jdbcType="VARCHAR" javaType="java.lang.String"/>
+		<result property="executeServerId" column="EXECUTE_SERVER_ID" jdbcType="INTEGER" javaType="java.lang.Integer" />
+		<result property="jobType" column="JOB_TYPE" jdbcType="VARCHAR" javaType="java.lang.String" />
+		<result property="folderName" column="FOLDER_NAME" jdbcType="VARCHAR" javaType="java.lang.String" />
+		<!-- 集群id -->
+		<result property="queueId" column="QUEUE_ID" jdbcType="INTEGER" javaType="java.lang.Integer" />
+	</resultMap>
+
+	<resultMap id="retryRule" type="com.meicloud.model.RetryRule">
+		<result property="retryId" column="RETRY_ID" jdbcType="INTEGER"
+			javaType="java.lang.Integer" />
+		<result property="retryName" column="R_NAME" jdbcType="VARCHAR"
+			javaType="java.lang.String" />
+		<result property="retryDesc" column="R_DESC" jdbcType="VARCHAR"
+			javaType="java.lang.String" />
+		<result property="isTime" column="R_IS_TIME" jdbcType="TINYINT"
+			javaType="boolean" />
+		<result property="timeOut" column="R_TIMEOUT" jdbcType="INTEGER"
+			javaType="java.lang.Integer" />
+		<result property="isError" column="R_IS_ERROR" jdbcType="TINYINT"
+			javaType="boolean" />
+		<result property="intervalTime" column="R_INTERVAL_TIME" jdbcType="INTEGER"
+			javaType="java.lang.Integer" />
+		<result property="errorIntervalNum" column="R_ERROR_INTERVAL_NUM" jdbcType="INTEGER"
+			javaType="java.lang.Integer" />
+		<result property="timeIntervalNum" column="R_TIMEOUT_INTERVAL_NUM" jdbcType="INTEGER"
+			javaType="java.lang.Integer" />
+	</resultMap>
+
+	<insert id="add" parameterType="com.meicloud.model.Job"
+		keyProperty="jobId">
+		<selectKey resultType="int" keyProperty="jobId" order="AFTER">
+			SELECT LAST_INSERT_ID() AS jobId
+		</selectKey>
+		insert into CM_JOB (
+				GROUP_ID, 
+				CHARGOR_ID,
+				CHARGOR_ID2,
+				CHARGOR_ID3,
+				JOB_NAME,
+				ORDER_NO,
+				LOG_FILE,
+				SERVER_FILE,
+				SVN_FILE,
+				IS_ENABLE,
+				C_DATE,
+				U_DATE,
+				RETRY_ID,
+				C_USER,
+				U_USER,
+				DEBUG_LEVEL,
+				IS_ONLINE,
+				APPEND_PARAMS,
+				RUN_PRIORITY,
+				EXECUTE_SERVER_ID,
+				JOB_TYPE,
+				FOLDER_NAME
+				)
+		values(
+				#{groupId,jdbcType=INTEGER},
+				#{chargorId,jdbcType=INTEGER},
+				#{chargorId2,jdbcType=INTEGER},
+				#{chargorId3,jdbcType=INTEGER},
+				#{jobName,jdbcType=VARCHAR},
+				#{orderNo,jdbcType=INTEGER},
+				#{logFile,jdbcType=VARCHAR},
+				#{serverFile,jdbcType=VARCHAR},
+				#{svnFile,jdbcType=VARCHAR},
+				#{enable,jdbcType=TINYINT},
+				NOW(),
+				NOW(),
+				#{retryId,jdbcType=VARCHAR},
+				#{cUser,jdbcType=VARCHAR},
+				#{uUser,jdbcType=VARCHAR},
+				#{debugLevel,jdbcType=VARCHAR},
+				#{online,jdbcType=TINYINT},
+				#{appendParams,jdbcType=VARCHAR},
+				#{runPriority,jdbcType=INTEGER},
+				#{executeServerId,jdbcType=INTEGER},
+				#{jobType,jdbcType=VARCHAR},
+				#{folderName,jdbcType=VARCHAR}
+				)
+	</insert>
+	
+	<insert id="addJobState" parameterType="com.meicloud.model.Job">
+		INSERT INTO cm_job_state (
+			JOB_ID,
+			GROUP_ID,
+			STATE,
+			MSG,
+			U_DATE
+		)
+		VALUES
+			(
+				#{jobId},
+				#{groupId},
+				0,
+				'INIT ADD...',
+				NOW()
+			)
+	</insert>
+	
+	<select id="getJobStateCountByJobId" parameterType="int" resultType="java.lang.Integer">
+		SELECT count(1) AS sum FROM cm_job_state WHERE JOB_ID = #{jobId}
+	</select>
+
+	<update id="update" parameterType="com.meicloud.model.Job">
+	<![CDATA[
+		update CM_JOB set
+			GROUP_ID=#{groupId,jdbcType=INTEGER},                       
+			CHARGOR_ID=#{chargorId,jdbcType=INTEGER},  
+			CHARGOR_ID2=#{chargorId2,jdbcType=INTEGER},  
+			CHARGOR_ID3=#{chargorId3,jdbcType=INTEGER},                       
+			JOB_NAME=#{jobName,jdbcType=VARCHAR},          
+			ORDER_NO=#{orderNo,jdbcType=VARCHAR},                       
+			LOG_FILE=#{logFile,jdbcType=VARCHAR},                        
+			SERVER_FILE=#{serverFile,jdbcType=VARCHAR},                 
+			SVN_FILE=#{svnFile,jdbcType=VARCHAR},                         
+			IS_ENABLE=#{enable},                             
+			U_DATE=NOW(),
+			RETRY_ID=#{retryId,jdbcType=INTEGER},
+			U_USER=#{uUser,jdbcType=VARCHAR},
+			DEBUG_LEVEL=#{debugLevel,jdbcType=VARCHAR},
+			IS_ONLINE=#{online},
+			APPEND_PARAMS=#{appendParams},
+			RUN_PRIORITY=#{runPriority,jdbcType=VARCHAR},
+			EXECUTE_SERVER_ID=#{executeServerId,jdbcType=INTEGER},
+			JOB_TYPE=#{jobType,jdbcType=VARCHAR},
+			FOLDER_NAME=#{folderName,jdbcType=VARCHAR}
+		where 
+		    JOB_ID=#{jobId}
+	]]>
+	</update>
+
+	<update id="updateStateByGroupId" parameterType="com.meicloud.model.Job">
+	<![CDATA[
+		update CM_JOB set                         
+			IS_ENABLE=#{enable}
+		where 
+		    GROUP_ID=#{groupId}
+	]]>
+	</update>
+
+	<update id="updateOrder" parameterType="com.meicloud.model.Job">
+	   <![CDATA[
+	      update CM_JOB set ORDER_NO=#{orderNo} where JOB_ID=#{jobId}
+	   ]]>
+	</update>
+
+	<update id="cancelOrder" parameterType="int">
+	   <![CDATA[
+	      update CM_JOB set ORDER_NO = 0 where GROUP_ID = #{groupId}
+	   ]]>
+	</update>
+	
+	<select id="findJobByRetryRuleId" parameterType="int" resultType="com.meicloud.model.Job">
+		select GROUP_ID as groupId, 
+				CHARGOR_ID as chargorId,
+				CHARGOR_ID2 as chargorId2,
+				CHARGOR_ID3 as chargorId3,
+				JOB_NAME as jobName,
+				ORDER_NO as orderNo,
+				LOG_FILE as logFile,
+				SERVER_FILE as serverFile,
+				SVN_FILE as svnFile,
+				IS_ENABLE as enable,
+				C_DATE as createDate,
+				U_DATE as updateDate,
+				RETRY_ID as retryId,
+				C_USER as cUser,
+				U_USER as uUser,
+				DEBUG_LEVEL as debugLevel,
+				IS_ONLINE as online,
+				APPEND_PARAMS as appendParams,
+				RUN_PRIORITY as runPriority,
+				EXECUTE_SERVER_ID as executeServerId,
+				JOB_TYPE AS jobType,
+				FOLDER_NAME AS folderName
+				from CM_JOB where RETRY_ID = #{retryId}
+	</select>
+
+	<select id="checkIfExists4New" parameterType="com.meicloud.model.Job"
+		resultType="int">
+	<![CDATA[
+	   select 
+	      count(1)
+	   from 
+	      CM_JOB 
+	   where 
+	      JOB_NAME=#{jobName}
+	   ]]>
+	</select>
+	
+	<select id="jobOfsamepriority" parameterType="com.meicloud.model.Job"
+		resultType="int">
+		<![CDATA[
+	 select 
+	    distinct  order_no
+	   from 
+	      CM_JOB 
+	   where 
+	      GROUP_ID=#{groupId}
+        ORDER BY order_no ASC
+	   ]]>
+	</select>
+	
+	<select id="checkIfExists4Update" parameterType="com.meicloud.model.Job"
+		resultType="int">
+		<![CDATA[
+		   select 
+		      count(1)
+		   from 
+		      CM_JOB 
+		   where 
+		      JOB_NAME=#{jobName}
+		      AND JOB_ID <> #{jobId}
+	   ]]>
+	</select>
+	
+	<delete id="delete" parameterType="int">
+		delete from CM_JOB where
+		JOB_ID=#{jobId}
+	</delete>
+
+	<delete id="deleteByGroupId" parameterType="int">
+		delete from CM_JOB
+		where GROUP_ID=#{groupId}
+	</delete>
+
+	<select id="getById" parameterType="int" resultMap="job">
+	<![CDATA[
+		SELECT
+			J.JOB_ID,
+			J.GROUP_ID,
+			J.JOB_NAME,
+			J.ORDER_NO,
+			J.LOG_FILE,
+			J.SERVER_FILE,
+			J.SVN_FILE,
+			J.IS_ENABLE,
+			J.C_DATE,
+			J.U_DATE,
+			J.C_USER,
+			J.U_USER,
+			J.RETRY_ID,
+			J.DEBUG_LEVEL,
+			J.IS_ONLINE,
+			G.G_NAME,
+			C.ID AS CHARGOR_ID,
+			C.`NAME`,
+			C2.ID AS CHARGOR_ID2,
+			C2.`NAME` AS NAME2,
+			C3.ID AS CHARGOR_ID3,
+			C3.`NAME` AS NAME3,
+			J.APPEND_PARAMS,
+			J.RUN_PRIORITY,
+			J.EXECUTE_SERVER_ID,
+			J.JOB_TYPE,
+			J.FOLDER_NAME
+		FROM
+			CM_JOB J
+			LEFT JOIN CM_GROUP G ON J.GROUP_ID = G.GROUP_ID
+			LEFT JOIN CM_CHARGOR C ON C.ID = J.CHARGOR_ID
+			LEFT JOIN CM_CHARGOR C2 ON C2.ID = J.CHARGOR_ID2
+			LEFT JOIN CM_CHARGOR C3 ON C3.ID = J.CHARGOR_ID3
+		where   
+		J.JOB_ID=#{jobId}
+	 ]]>
+	</select>
+	
+	<select id="getByJobName" parameterType="String" resultMap="job">
+	<![CDATA[
+		SELECT
+			J.JOB_ID,
+			J.GROUP_ID,
+			J.JOB_NAME,
+			J.ORDER_NO,
+			J.LOG_FILE,
+			J.SERVER_FILE,
+			J.SVN_FILE,
+			J.IS_ENABLE,
+			J.C_DATE,
+			J.U_DATE,
+			J.C_USER,
+			J.U_USER,
+			J.RETRY_ID,
+			J.DEBUG_LEVEL,
+			J.IS_ONLINE,
+			G.G_NAME,
+			C.ID AS CHARGOR_ID,
+			C.`NAME`,
+			C2.ID AS CHARGOR_ID2,
+			C2.`NAME` AS NAME2,
+			C3.ID AS CHARGOR_ID3,
+			C3.`NAME` AS NAME3,
+			J.APPEND_PARAMS,
+			J.RUN_PRIORITY,
+			J.EXECUTE_SERVER_ID,
+			J.JOB_TYPE,
+			J.FOLDER_NAME
+		FROM
+			CM_JOB J
+			LEFT JOIN CM_GROUP G ON J.GROUP_ID = G.GROUP_ID
+			LEFT JOIN CM_CHARGOR C ON C.ID = J.CHARGOR_ID
+			LEFT JOIN CM_CHARGOR C2 ON C2.ID = J.CHARGOR_ID2
+			LEFT JOIN CM_CHARGOR C3 ON C3.ID = J.CHARGOR_ID3
+		where   
+		J.JOB_NAME=#{jobName}
+	 ]]>
+	</select>
+	
+	<select id="checkJobByName" parameterType="String" resultMap="job">
+	<![CDATA[
+		SELECT
+			J.JOB_ID,
+			J.GROUP_ID,
+			J.JOB_NAME,
+			J.ORDER_NO,
+			J.LOG_FILE,
+			J.SERVER_FILE,
+			J.SVN_FILE,
+			J.IS_ENABLE,
+			J.C_DATE,
+			J.U_DATE,
+			J.C_USER,
+			J.U_USER,
+			J.RETRY_ID,
+			J.DEBUG_LEVEL,
+			J.IS_ONLINE,
+			J.APPEND_PARAMS,
+			J.RUN_PRIORITY,
+			J.EXECUTE_SERVER_ID,
+			J.JOB_TYPE,
+			J.FOLDER_NAME
+		FROM
+			CM_JOB J
+		where   
+		J.JOB_NAME=#{jobName}
+	 ]]>
+	</select>
+	
+	<select id="getListCurrentWindow" resultMap="job">
+	   <![CDATA[
+		SELECT
+			G.GROUP_ID AS GROUP_ID,
+			G.G_NAME AS G_NAME,
+			J.JOB_ID AS JOB_ID,
+			J.EXECUTE_SERVER_ID,
+			J.JOB_NAME AS JOB_NAME,
+			J.RUN_PRIORITY AS RUN_PRIORITY,
+			J.ORDER_NO AS ORDER_NO,
+			J.C_DATE,
+			J.U_DATE,
+			CASE
+		WHEN (
+			JL.C_DATE IS NOT NULL
+			AND date(JL.C_DATE) = date(NOW())
+		) THEN
+			MIN(JL.C_DATE)
+		ELSE
+			NULL
+		END AS START_DATE,
+		 CASE
+		WHEN (
+			JL.C_DATE IS NOT NULL
+			AND date(JL.C_DATE) = DATE(NOW())
+			AND MIN(JL.C_DATE) <> MAX(JL.C_DATE)
+		) THEN
+			MAX(JL.C_DATE)
+		ELSE
+			NULL
+		END AS END_DATE,
+		 CASE
+		WHEN (DATE(JL.C_DATE) = DATE(NOW()) AND MIN(JL.C_DATE) <> MAX(JL.C_DATE))THEN
+			TIMESTAMPDIFF(
+				SECOND,
+				(SELECT joblog.C_DATE FROM cm_job_log joblog WHERE joblog.RUN_JOB_ID = RJ.RUN_JOB_ID ORDER BY joblog.C_DATE DESC LIMIT 1,1),
+				MAX(JL.C_DATE)
+			)
+		WHEN (DATE(JL.C_DATE) = DATE(NOW()) AND MIN(JL.C_DATE) = MAX(JL.C_DATE)) THEN
+			TIMESTAMPDIFF(
+				SECOND,
+				MIN(JL.C_DATE),
+				NOW()
+			)
+		ELSE
+			0
+		END AS EXEC_TIME,
+		 JS.STATE AS EXEC_STATE,
+		 C1.`NAME` AS `NAME`,
+		 C2.`NAME` AS NAME2,
+		 C3.`NAME` AS NAME3,
+		 J.IS_ENABLE AS IS_ENABLE
+		FROM
+			cm_job_state JS
+		LEFT JOIN cm_job J ON JS.JOB_ID = J.JOB_ID
+		LEFT JOIN cm_group G ON JS.GROUP_ID = G.GROUP_ID
+		LEFT JOIN cm_run_job RJ ON JS.JOB_ID = RJ.JOB_ID
+		LEFT JOIN cm_job_log JL ON RJ.RUN_JOB_ID = JL.RUN_JOB_ID
+		LEFT JOIN cm_chargor C1 ON J.CHARGOR_ID = C1.ID
+		LEFT JOIN cm_chargor C2 ON J.CHARGOR_ID2 = C2.ID
+		LEFT JOIN cm_chargor C3 ON J.CHARGOR_ID3 = C3.ID
+		]]>
+		<where>
+		   1=1
+		    <if test="groupId!=0">
+		      AND JS.GROUP_ID=#{groupId}
+		   </if>
+		   <if test="state == -1">
+			  AND (G.IS_ENABLE=0 OR J.IS_ENABLE=0 OR J.IS_ONLINE=0) 
+		   </if>
+		   <if test="state != null and state &gt; -1">
+			  AND JS.STATE=#{state} 
+		   </if>
+		   <if test="queueId != 0">
+			   AND G.QUEUE_ID=#{queueId}
+			</if>
+		   <if test = "jobName!=null">
+				AND (
+					J.JOB_NAME LIKE CONCAT(CONCAT('%',#{jobName}),'%')
+					OR G.G_NAME LIKE CONCAT(CONCAT('%',#{jobName}),'%')
+					OR C1.`NAME` LIKE CONCAT(CONCAT('%',#{jobName}),'%')
+					OR C2.`NAME` LIKE CONCAT(CONCAT('%',#{jobName}),'%')
+					OR C3.`NAME` LIKE CONCAT(CONCAT('%',#{jobName}),'%')
+				)
+			</if>
+		</where>
+		GROUP BY
+			JS.JOB_ID
+		ORDER BY
+			J.GROUP_ID,
+			J.JOB_ID
+	</select>
+	
+	<select id="getList4EditPage" resultMap="job">
+		SELECT
+			J.JOB_ID AS JOB_ID,
+			J.SVN_FILE AS SVN_FILE,
+			J.JOB_NAME AS JOB_NAME,
+			J.ORDER_NO AS ORDER_NO,
+			J.RUN_PRIORITY AS RUN_PRIORITY,
+			J.C_DATE AS C_DATE,
+			J.U_DATE AS U_DATE,
+			J.IS_ENABLE AS IS_ENABLE,
+			J.IS_ONLINE AS IS_ONLINE,
+			C.`NAME` AS `NAME`,
+			C.ID AS CHARGOR_ID,
+			C2.`NAME` AS `NAME2`,
+			C2.ID AS CHARGOR_ID2,
+			C3.`NAME` AS `NAME3`,
+			C3.ID AS CHARGOR_ID3,
+			G.G_NAME AS G_NAME,
+			G.GROUP_ID AS GROUP_ID,
+			J.EXECUTE_SERVER_ID,
+			J.JOB_TYPE,
+			J.FOLDER_NAME
+		FROM
+			cm_job J
+		LEFT JOIN cm_group G ON J.GROUP_ID = G.GROUP_ID
+		LEFT JOIN cm_chargor C ON J.CHARGOR_ID = C.ID
+		LEFT JOIN cm_chargor C2 ON J.CHARGOR_ID2 = C2.ID
+		LEFT JOIN cm_chargor C3 ON J.CHARGOR_ID3 = C3.ID
+		<where>
+		  1=1
+		   <if test="queueId!=0">
+		  	  AND G.QUEUE_ID=#{queueId}
+		  </if>
+		  <if test="groupId!=0">
+		  	  AND G.GROUP_ID=#{groupId}
+		  </if>
+		  <if test="jobName!=null">
+		     AND (
+		     	J.JOB_NAME LIKE CONCAT(CONCAT('%',#{jobName}),'%')
+		     	OR G.G_NAME LIKE CONCAT(CONCAT('%',#{jobName}),'%')
+		     	OR C.`NAME` LIKE CONCAT(CONCAT('%',#{jobName}),'%')
+		     )
+		  </if>
+		</where>
+	</select>
+	
+	<!-- 禁用的作业 -->
+	<select id="getListRunPageHeader_disable" resultMap="job">
+		SELECT
+			J.JOB_ID AS JOB_ID,
+			J.SVN_FILE AS SVN_FILE,
+			G.GROUP_ID AS GROUP_ID,
+			G.G_NAME AS G_NAME,
+			J.JOB_NAME AS JOB_NAME,
+			J.RUN_PRIORITY AS RUN_PRIORITY,
+			J.ORDER_NO AS ORDER_NO,
+			J.IS_ENABLE AS IS_ENABLE,
+			J.C_DATE AS C_DATE,
+			J.U_DATE AS U_DATE,
+			C.`NAME` AS `NAME`,
+			C2.`NAME` AS `NAME2`,
+			C3.`NAME` AS `NAME3`,
+			NULL AS START_DATE,
+			NULL AS END_DATE,
+			0 AS EXEC_TIME,
+			4 AS STATE,
+			J.EXECUTE_SERVER_ID,
+			J.JOB_TYPE,
+			J.FOLDER_NAME
+		FROM
+			cm_job J
+		LEFT JOIN cm_group G ON J.GROUP_ID = G.GROUP_ID
+		LEFT JOIN cm_chargor C ON J.CHARGOR_ID = C.ID
+		LEFT JOIN cm_chargor C2 ON J.CHARGOR_ID2 = C2.ID
+		LEFT JOIN cm_chargor C3 ON J.CHARGOR_ID3 = C3.ID
+		WHERE
+			(
+				J.IS_ENABLE = 0
+				OR J.IS_ONLINE = 0
+				OR G.IS_ENABLE = 0
+			)
+			<if test="queueId !=0">
+			  AND G.QUEUE_ID=#{queueId}
+			</if>
+	</select>
+	
+	<!--
+	0-运行时表等待中 
+	1-消息队列等待 无法计算开始结束时间 
+	-->
+	<select id="getListRunPageHeader_0_1" parameterType="int"  resultMap="job">
+		SELECT
+			J.JOB_ID AS JOB_ID,
+			J.SVN_FILE AS SVN_FILE,
+			G.GROUP_ID AS GROUP_ID,
+			G.G_NAME AS G_NAME,
+			J.JOB_NAME AS JOB_NAME,
+			J.RUN_PRIORITY AS RUN_PRIORITY,
+			J.ORDER_NO AS ORDER_NO,
+			J.IS_ENABLE AS IS_ENABLE,
+			J.C_DATE AS C_DATE,
+			J.U_DATE AS U_DATE,
+			C.`NAME` AS `NAME`,
+			C2.`NAME` AS `NAME2`,
+			C3.`NAME` AS `NAME3`,
+			NULL AS START_DATE,
+			NULL AS END_DATE,
+			0 AS EXEC_TIME,
+			V.STATE AS STATE,
+			J.EXECUTE_SERVER_ID,
+			J.JOB_TYPE,
+			J.FOLDER_NAME
+		FROM
+			cm_job J
+		LEFT JOIN cm_group G ON J.GROUP_ID = G.GROUP_ID
+		LEFT JOIN cm_chargor C ON J.CHARGOR_ID = C.ID
+		LEFT JOIN cm_chargor C2 ON J.CHARGOR_ID2 = C2.ID
+		LEFT JOIN cm_chargor C3 ON J.CHARGOR_ID3 = C3.ID
+		LEFT JOIN cm_run_job RJ ON J.JOB_ID = RJ.JOB_ID
+		LEFT JOIN v_run_header V ON RJ.RUN_JOB_ID = V.RUN_JOB_ID
+		WHERE
+			V.STATE = #{state}
+			<if test="queueId !=0">
+			  AND G.QUEUE_ID=#{queueId}
+			</if>
+	</select>
+	
+	<!-- 正在运行中的作业 包含超时作业-->
+	<select id="getListRunPageHeader_2" resultMap="job">
+		SELECT
+			J.JOB_ID AS JOB_ID,
+			J.SVN_FILE AS SVN_FILE,
+			G.GROUP_ID AS GROUP_ID,
+			G.G_NAME AS G_NAME,
+			J.JOB_NAME AS JOB_NAME,
+			J.RUN_PRIORITY AS RUN_PRIORITY,
+			J.ORDER_NO AS ORDER_NO,
+			J.IS_ENABLE AS IS_ENABLE,
+			J.C_DATE AS C_DATE,
+			J.U_DATE AS U_DATE,
+			C.`NAME` AS `NAME`,
+			C2.`NAME` AS `NAME2`,
+			C3.`NAME` AS `NAME3`,
+			RJ.U_DATE AS START_DATE,
+			NULL AS END_DATE,
+			TIMESTAMPDIFF(SECOND, RJ.U_DATE, NOW()) AS EXEC_TIME,
+			2 AS STATE,
+			J.EXECUTE_SERVER_ID,
+			J.JOB_TYPE,
+			J.FOLDER_NAME
+		FROM
+			cm_job J
+		LEFT JOIN cm_run_job RJ ON J.JOB_ID = RJ.JOB_ID
+		LEFT JOIN cm_group G ON J.GROUP_ID = G.GROUP_ID
+		LEFT JOIN cm_chargor C ON J.CHARGOR_ID = C.ID
+		LEFT JOIN cm_chargor C2 ON J.CHARGOR_ID2 = C2.ID
+		LEFT JOIN cm_chargor C3 ON J.CHARGOR_ID3 = C3.ID
+		LEFT JOIN v_run_header V ON RJ.RUN_JOB_ID = V.RUN_JOB_ID
+		WHERE
+			V.STATE = 2 OR V.STATE=6
+			<if test="queueId !=0">
+			  AND G.QUEUE_ID=#{queueId}
+			</if>
+	</select>
+	
+	<!--  当天运行异常 取消执行 运行成功 #3 4 5 有结束时间-->
+	<select id="getListRunPageHeader_3_4_5" parameterType="int" resultMap="job">
+        SELECT
+			J.JOB_ID AS JOB_ID,
+			J.SVN_FILE AS SVN_FILE,
+			G.GROUP_ID AS GROUP_ID,
+			G.G_NAME AS G_NAME,
+			J.JOB_NAME AS JOB_NAME,
+			J.RUN_PRIORITY AS RUN_PRIORITY,
+			J.ORDER_NO AS ORDER_NO,
+			J.IS_ENABLE AS IS_ENABLE,
+			J.C_DATE AS C_DATE,
+			J.U_DATE AS U_DATE,
+			C.`NAME` AS `NAME`,
+			C2.`NAME` AS `NAME2`,
+			C3.`NAME` AS `NAME3`,
+			MIN(JL.C_DATE) AS START_DATE,
+			MAX(JL.C_DATE) AS END_DATE,
+			J.EXECUTE_SERVER_ID,
+			J.JOB_TYPE,
+			J.FOLDER_NAME,
+			TIMESTAMPDIFF(
+				SECOND,
+				MIN(JL.C_DATE),
+				MAX(JL.C_DATE)
+			) AS EXEC_TIME,
+			RJ.STATE AS STATE
+		FROM
+			cm_job J
+		LEFT JOIN cm_run_job RJ ON J.JOB_ID = RJ.JOB_ID
+		LEFT JOIN cm_group G ON J.GROUP_ID = G.GROUP_ID
+		LEFT JOIN cm_chargor C ON J.CHARGOR_ID = C.ID
+		LEFT JOIN cm_chargor C2 ON J.CHARGOR_ID2 = C2.ID
+		LEFT JOIN cm_chargor C3 ON J.CHARGOR_ID3 = C3.ID
+		LEFT JOIN v_run_header V ON RJ.RUN_JOB_ID = V.RUN_JOB_ID
+		LEFT JOIN cm_job_log JL ON (
+			V.RUN_JOB_ID = JL.RUN_JOB_ID
+			AND V.RUN_VERSION = JL.RUN_VERSION
+		)
+		WHERE
+			V.STATE = #{state}
+			<if test="queueId !=0">
+			  AND G.QUEUE_ID=#{queueId}
+			</if>
+		GROUP BY
+			RJ.RUN_JOB_ID
+	</select>
+	
+	<!-- 运行超时作业-->
+	<select id="getListRunPageHeader_6" resultMap="job">
+		SELECT
+			J.JOB_ID AS JOB_ID,
+			J.SVN_FILE AS SVN_FILE,
+			G.GROUP_ID AS GROUP_ID,
+			G.G_NAME AS G_NAME,
+			J.JOB_NAME AS JOB_NAME,
+			J.RUN_PRIORITY AS RUN_PRIORITY,
+			J.ORDER_NO AS ORDER_NO,
+			J.IS_ENABLE AS IS_ENABLE,
+			J.C_DATE AS C_DATE,
+			J.U_DATE AS U_DATE,
+			C.`NAME` AS `NAME`,
+			C2.`NAME` AS `NAME2`,
+			C3.`NAME` AS `NAME3`,
+			RJ.U_DATE AS START_DATE,
+			NULL AS END_DATE,
+			J.EXECUTE_SERVER_ID,
+			J.JOB_TYPE,
+			J.FOLDER_NAME,
+			TIMESTAMPDIFF(SECOND, RJ.U_DATE, NOW()) AS EXEC_TIME,
+			2 AS STATE
+		FROM
+			cm_job J
+		LEFT JOIN cm_run_job RJ ON J.JOB_ID = RJ.JOB_ID
+		LEFT JOIN cm_group G ON J.GROUP_ID = G.GROUP_ID
+		LEFT JOIN cm_chargor C ON J.CHARGOR_ID = C.ID
+		LEFT JOIN cm_chargor C2 ON J.CHARGOR_ID2 = C2.ID
+		LEFT JOIN cm_chargor C3 ON J.CHARGOR_ID3 = C3.ID
+		LEFT JOIN v_run_header V ON RJ.RUN_JOB_ID = V.RUN_JOB_ID
+		WHERE
+			V.STATE = 6
+			<if test="queueId !=0">
+			  AND G.QUEUE_ID=#{queueId}
+			</if>
+	</select>
+	
+	<select id="jobHisList" parameterType="int" resultMap="job">
+			SELECT
+				J.JOB_ID,
+				J.GROUP_ID,
+				J.JOB_NAME,
+				J.ORDER_NO,
+				J.RUN_PRIORITY,
+				J.IS_ENABLE,
+				VS.STATE AS EXEC_STATE,
+				G.G_NAME,
+				C. NAME,
+				C2. NAME AS NAME2,
+				C3. NAME AS NAME3,
+				C.ID AS CHARGOR_ID,
+				J.EXECUTE_SERVER_ID,
+				J.JOB_TYPE,
+				J.FOLDER_NAME
+			FROM
+				CM_JOB J
+			LEFT JOIN CM_GROUP G ON J.GROUP_ID = G.GROUP_ID
+			LEFT JOIN CM_CHARGOR C ON J.CHARGOR_ID = C.ID
+			LEFT JOIN CM_CHARGOR C2 ON J.CHARGOR_ID2 = C2.ID
+			LEFT JOIN CM_CHARGOR C3 ON J.CHARGOR_ID3 = C3.ID
+			JOIN (
+				(
+					SELECT
+						RJ.JOB_ID,
+						RJ.STATE
+					FROM
+						CM_RUN_JOB RJ
+					WHERE
+						RJ.RUN_GROUP_ID = #{runGroupId}
+				)
+				UNION ALL
+					(
+						SELECT
+							RJH.JOB_ID,
+							RJH.STATE
+						FROM
+							CM_RUN_JOB_HIS RJH
+						WHERE
+							RJH.RUN_GROUP_ID = #{runGroupId}
+					)
+			) VS ON VS.JOB_ID = J.JOB_ID
+			ORDER BY
+				J.ORDER_NO ASC,
+				J.JOB_NAME
+	</select>
+	
+	<!-- 当天应该跑数但还未推送至运行时的作业  无法计算开始结束时间-->
+	<select id="getListRunPageHeader_7" resultMap="job">
+		SELECT
+			J.JOB_ID AS JOB_ID,
+			J.SVN_FILE AS SVN_FILE,
+			G.GROUP_ID AS GROUP_ID,
+			G.G_NAME AS G_NAME,
+			J.JOB_NAME AS JOB_NAME,
+			J.RUN_PRIORITY AS RUN_PRIORITY,
+			J.ORDER_NO AS ORDER_NO,
+			J.IS_ENABLE AS IS_ENABLE,
+			C.`NAME` AS `NAME`,
+			C2.`NAME` AS `NAME2`,
+			C3.`NAME` AS `NAME3`,
+			NULL AS START_DATE,
+			NULL AS END_DATE,
+			0 AS EXEC_TIME,
+			7 AS STATE,
+			J.EXECUTE_SERVER_ID,
+			J.JOB_TYPE,
+			J.FOLDER_NAME
+		FROM
+			cm_job J
+		LEFT JOIN cm_group G ON J.GROUP_ID = G.GROUP_ID
+		LEFT JOIN cm_chargor C ON J.CHARGOR_ID = C.ID
+		LEFT JOIN cm_chargor C2 ON J.CHARGOR_ID2 = C2.ID
+		LEFT JOIN cm_chargor C3 ON J.CHARGOR_ID3 = C3.ID
+		<!--后续要放开  JOIN v_run_header V ON J.JOB_ID = V.JOB_ID-->
+		where 1=1
+	<!-- 后续要放开  and V.STATE=7-->
+    	<if test="queueId !=0">
+    	 	 AND G.QUEUE_ID=#{queueId}
+   		 </if>
+</select>
+
+<delete id="deleteById" parameterType="int">
+	delete from CM_JOB where JOB_ID=#{jobId}
+</delete>
+
+<delete id="deleteStateByJobId" parameterType="int">
+	delete from cm_job_state where JOB_ID=#{jobId}
+</delete>
+
+<delete id="deleteStateByGroupId" parameterType="int">
+	delete from cm_job_state where GROUP_ID=#{groupId}
+</delete>
+
+<select id="retryRule" resultMap="retryRule">
+<![CDATA[
+    SELECT * FROM CM_JOB_RETRY_RULE
+]]>
+</select>
+
+<!-- 依赖作业作为一个虚拟组 -->
+	<select id="getDummyGroupState" parameterType="int" resultMap="job">
+		SELECT
+			J.JOB_ID,
+			J.EXECUTE_SERVER_ID,
+			J.JOB_TYPE,
+			J.FOLDER_NAME,
+			CASE
+		WHEN (
+			J.IS_ENABLE = 1
+			AND G.IS_ENABLE = 1
+		) THEN
+			1
+		ELSE
+			0
+		END AS IS_ENABLE,
+		 CASE
+		WHEN RJ.STATE IS NULL THEN
+			0
+		ELSE
+			RJ.STATE
+		END AS EXEC_STATE
+		FROM
+			cm_job J
+		LEFT JOIN cm_group_job_refer GJR ON J.JOB_ID = GJR.JOB_ID
+		LEFT JOIN cm_group G ON J.GROUP_ID = G.GROUP_ID
+		LEFT OUTER JOIN cm_run_job RJ ON J.JOB_ID = RJ.JOB_ID
+		WHERE
+			GJR.GROUP_ID = #{groupId,jdbcType=INTEGER}
+	</select>
+	
+	<!-- 添加一条记录到作业的历史表中 -->
+	<insert id="addChlog" parameterType="com.meicloud.model.Job">
+	   <![CDATA[
+	      INSERT INTO CM_JOB_CHLOG (
+				      	JOB_ID,
+						GROUP_ID,
+						JOB_NAME,
+						SERVER_FILE,
+						LOG_FILE,
+						SVN_FILE,
+						CHARGOR_ID,
+						CHARGOR_ID2,
+						CHARGOR_ID3,
+						IS_ENABLE,
+						ORDER_NO,
+						DEBUG_LEVEL,
+						`DESC`,
+						C_USER,
+						U_USER,
+						C_DATE,
+						U_DATE,
+						R_IS_TIME,
+						R_TIMEOUT,
+						R_IS_ERROR,
+						R_INTERVAL_TIME,
+						R_ERROR_INTERVAL_NUM,
+						R_TIMEOUT_INTERVAL_NUM,
+						LOG_RESON,
+						LOG_DATE,
+						APPEND_PARAMS,
+						RUN_PRIORITY,
+						EXECUTE_SERVER_ID,
+						JOB_TYPE,
+						FOLDER_NAME
+	      )
+					SELECT
+						J.JOB_ID,
+						J.GROUP_ID,
+						J.JOB_NAME,
+						J.SERVER_FILE,
+						J.LOG_FILE,
+						J.SVN_FILE,
+						J.CHARGOR_ID,
+						J.CHARGOR_ID2,
+						J.CHARGOR_ID3,
+						J.IS_ENABLE,
+						J.ORDER_NO,
+						J.DEBUG_LEVEL,
+						J. `DESC`,
+						J.C_USER,
+						#{uUser},
+						J.C_DATE,
+						J.U_DATE,
+						R.R_IS_TIME,
+						R.R_TIMEOUT,
+						R.R_IS_ERROR,
+						R.R_INTERVAL_TIME,
+						R.R_ERROR_INTERVAL_NUM,
+						R.R_TIMEOUT_INTERVAL_NUM,
+						#{logReson},
+						NOW(),
+						J.APPEND_PARAMS,
+						J.RUN_PRIORITY,
+						J.EXECUTE_SERVER_ID,
+						J.JOB_TYPE,
+						J.FOLDER_NAME
+					FROM
+						CM_JOB J
+					LEFT JOIN cm_job_retry_rule R ON R.RETRY_ID = J.RETRY_ID
+					WHERE
+						J.JOB_ID = #{jobId}
+	   ]]>
+	</insert>
+	
+</mapper> 

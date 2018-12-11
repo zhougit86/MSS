@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.meicloud.dao.PermMapper">
+
+	<resultMap id="baseSql" type="com.meicloud.model.Perm">
+		<result property="permId" column="PERM_ID" />
+		<result property="permParentId" column="PERM_PARENT_ID" />
+		<result property="permCode" column="PERM_CODE"/>
+		<result property="permName" column="PERM_NAME" />
+		<result property="permPath" column="PERM_PATH" />
+		<result property="permType" column="PERM_TYPE" />
+		<result property="sort" column="SORT" />
+		<result property="createDate" column="CREATE_DATE" />
+	</resultMap>
+
+	<select id="getList" resultMap="baseSql" parameterType="com.meicloud.model.Perm">
+	    SELECT
+			P.PERM_ID,
+			P.PERM_PARENT_ID,
+			P.PERM_CODE,
+		    P.PERM_NAME,
+			P.PERM_PATH,
+		    P.PERM_TYPE,
+			P.SORT,
+			P.CREATE_DATE
+		FROM
+			CM_PERM_V P
+			where 1=1
+		<if test="permType!=null">
+			AND  P.PERM_TYPE = #{permType}
+		</if>
+		ORDER BY P.SORT ASC
+	</select>
+
+</mapper>

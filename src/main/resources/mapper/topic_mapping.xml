@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.meicloud.dao.TopicMapper">
+
+	<resultMap id="subject" type="com.meicloud.model.Topic">
+	  <result property="topicId" column="TOPIC_ID" jdbcType="INTEGER" javaType="java.lang.Integer"/>
+	  <result property="name" column="NAME" jdbcType="VARCHAR" javaType="java.lang.String"/>
+	  <result property="queueId" column="QUEUE_ID" jdbcType="VARCHAR" javaType="java.lang.String"/>
+	  <result property="createDate" column="C_DATE" jdbcType="TIMESTAMP" javaType="java.util.Date"/>
+	  <result property="desc" column="DESC" jdbcType="VARCHAR" javaType="java.lang.String"/>
+		<result property="queueName" column="QUEUE_NAME" jdbcType="VARCHAR" javaType="java.lang.String"/>
+	</resultMap>
+	
+	<select id="topicList" resultMap="subject">
+	  <![CDATA[
+	    SELECT
+			T.TOPIC_ID,
+			T.NAME,
+			T.QUEUE_ID,
+			T.C_DATE,
+			T.`DESC`,
+		    Q.QUEUE_NAME
+		FROM
+			CM_TOPIC T
+			 LEFT JOIN CM_QUEUE Q ON T.QUEUE_ID=Q.QUEUE_ID
+	  ]]>
+	</select>
+
+	<select id="topicListByQueueId" resultMap="subject" parameterType="java.lang.String">
+	    SELECT
+			T.TOPIC_ID,
+			T.NAME,
+			T.QUEUE_ID,
+			T.C_DATE,
+			T.`DESC`,
+		    Q.QUEUE_NAME
+		FROM
+			CM_TOPIC T
+			 LEFT JOIN CM_QUEUE Q ON T.QUEUE_ID=Q.QUEUE_ID
+		WHERE T.QUEUE_ID = #{queueId}
+	</select>
+
+	<select id="topicListByQueueIds" resultMap="subject" parameterType="java.util.List">
+		SELECT
+		T.TOPIC_ID,
+		T.NAME,
+		T.QUEUE_ID,
+		T.C_DATE,
+		T.`DESC`,
+		Q.QUEUE_NAME
+		FROM
+		CM_TOPIC T
+		LEFT JOIN CM_QUEUE Q ON T.QUEUE_ID=Q.QUEUE_ID
+		WHERE 1=1
+		<if test="list!=null">
+			and T.QUEUE_ID IN
+			<foreach item="item" index="index" collection="list" open="("  separator="," close=")">
+				#{item}
+			</foreach>
+		</if>
+	</select>
+
+	<select id="getTopic" resultMap="subject" parameterType="java.lang.Integer">
+		SELECT
+		T.TOPIC_ID,
+		T.NAME,
+		T.QUEUE_ID,
+		T.C_DATE,
+		T.`DESC`,
+		    Q.QUEUE_NAME
+		FROM
+		CM_TOPIC T
+		 LEFT JOIN CM_QUEUE Q ON T.QUEUE_ID=Q.QUEUE_ID
+		WHERE T.TOPIC_ID = #{topicId}
+	</select>
+	
+	<select id="getTopicByName" resultMap="subject" parameterType="java.lang.String">
+		SELECT
+		T.TOPIC_ID,
+		T.NAME,
+		T.QUEUE_ID,
+		T.C_DATE,
+		T.`DESC`,
+		    Q.QUEUE_NAME
+		FROM
+		CM_TOPIC T
+		 LEFT JOIN CM_QUEUE Q ON T.QUEUE_ID=Q.QUEUE_ID
+		WHERE T.NAME = #{name}
+	</select>
+	
+	<!-- add by zouhb2 -->
+	<insert id="addTopic" parameterType="com.meicloud.model.Topic">
+		insert into `cm_topic` ( `NAME`, `DESC`, `QUEUE_ID`, `C_DATE`) values (#{name}, #{desc},#{queueId}, #{createDate})
+	</insert>
+	
+	<update id="upadteTopic" parameterType="com.meicloud.model.Topic">
+		update `cm_topic` set `NAME`=#{name}, `DESC`=#{desc},`QUEUE_ID`=#{queueId} where `TOPIC_ID`=#{topicId}
+	</update>
+	
+	<delete id="deleteTopic" >
+		delete from `cm_topic` where `TOPIC_ID`=#{topicId} 
+	</delete>
+	
+	<select id="checkIfExists4New" parameterType="com.meicloud.model.Topic"
+		resultType="int">
+	<![CDATA[
+	select count(1)
+	from cm_topic
+	where name=#{name} and QUEUE_ID = #{queueId}
+	   ]]>
+	</select>
+	
+	<select id="checkIfExists4Update" parameterType="com.meicloud.model.Topic"
+		resultType="int">
+		<![CDATA[
+		   select 
+		      count(1)
+		   from 
+		      cm_topic 
+		   where 
+		      name=#{name}
+		      AND topic_id <> #{topicId} and QUEUE_ID = #{queueId}
+	   ]]>
+	</select>
+
+	<select id="findListByRoles" resultMap="subject" parameterType="com.meicloud.dto.TopicVO">
+		SELECT
+		DISTINCT T.TOPIC_ID,
+		T.NAME,
+		T.QUEUE_ID,
+		T.C_DATE,
+		T.`DESC`,
+		Q.QUEUE_NAME
+		FROM
+		CM_TOPIC T
+		LEFT JOIN CM_QUEUE Q ON T.QUEUE_ID=Q.QUEUE_ID
+		LEFT JOIN CM_ROLE_TOPIC R ON R.TOPIC_ID=T.TOPIC_ID
+		WHERE 1=1
+		<if test="queueId!=null">
+			and T.QUEUE_ID = #{queueId}
+		</if>
+		<if test="roles!=null and roles.size >0 ">
+			and R.ROLE_ID IN
+			<foreach item="item" index="index" collection="roles" open="("  separator="," close=")">
+				#{item}
+			</foreach>
+		</if>
+	</select>
+	
+</mapper>

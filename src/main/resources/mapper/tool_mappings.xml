@@ -1,0 +1,439 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.meicloud.dao.ToolMapper">
+
+	<resultMap id="export" type="com.meicloud.model.Export">
+	   <result property="topicName" column="TOPIC_NAME" jdbcType="VARCHAR" javaType="java.lang.String"/>
+	   <result property="groupName" column="GROUP_NAME" jdbcType="VARCHAR" javaType="java.lang.String"/>
+	   <result property="jobNum" column="JOB_NUM" jdbcType="VARCHAR" javaType="java.lang.String"/>
+	   <result property="groupTime" column="GROUP_TIME" jdbcType="VARCHAR" javaType="java.lang.String"/>
+	   <result property="cron" column="CRON" jdbcType="VARCHAR" javaType="java.lang.String"/>
+	   <result property="startTime" column="START_TIME" jdbcType="TIMESTAMP" javaType="java.util.Date"/>
+	   <result property="endTime" column="END_TIME" jdbcType="TIMESTAMP" javaType="java.util.Date"/>
+	   <result property="jobName" column="JOB_NAME" jdbcType="VARCHAR" javaType="java.lang.String"/>
+	   <result property="jobTodayTime" column="JOB_TODAY_TIME" jdbcType="VARCHAR" javaType="java.lang.String"/>
+	   <result property="jobYesTime" column="JOB_YES_TIME" jdbcType="VARCHAR" javaType="java.lang.String"/>
+	   <result property="jobDbyTime" column="JOB_DBY_TIME" jdbcType="VARCHAR" javaType="java.lang.String"/>
+	   <result property="userName" column="USER_NAME" jdbcType="VARCHAR" javaType="java.lang.String"/>
+	   <result property="groupEnable" column="GROUP_IS_ENABLE" jdbcType="VARCHAR" javaType="java.lang.String"/>
+	   <result property="jobEnable" column="JOB_IS_ENABLE" jdbcType="VARCHAR" javaType="java.lang.String"/>
+	</resultMap>
+	
+	<resultMap id="tool" type="com.meicloud.model.Tool">
+	   <result property="toolId" column="TOOL_ID" jdbcType="INTEGER" javaType="int"/>
+	   <result property="toolName" column="TOOL_NAME" jdbcType="VARCHAR" javaType="java.lang.String"/>
+	   <result property="toolUrl" column="TOOL_URL" jdbcType="VARCHAR" javaType="java.lang.String"/>
+	   <result property="desc" column="DESC" jdbcType="VARCHAR" javaType="java.lang.String"/>
+	</resultMap>
+
+	<select id="dwTime" resultMap="export">
+		<![CDATA[
+		  SELECT
+		        T.NAME AS TOPIC_NAME,
+				A.G_NAME AS GROUP_NAME,
+				A.CRON AS CRON,
+				S.EXEC_TIME AS GROUP_TIME,
+				S.START_DATE AS START_TIME,
+				S.END_DATE AS END_TIME,
+				S.JOB_NUM AS JOB_NUM
+			FROM
+				CM_GROUP A
+			LEFT JOIN CM_GROUP_LEVEL L ON A.LEVEL_ID = L.LEVEL_ID
+			LEFT JOIN CM_TOPIC T ON A.TOPIC_ID = T.TOPIC_ID
+			LEFT JOIN (
+				SELECT
+					J.GROUP_ID,
+					COUNT(J.JOB_ID) JOB_NUM,
+					MIN(T.START_DATE) START_DATE,
+					CASE
+				WHEN MAX(T.END_DATE) >= MIN(T.START_DATE) THEN
+					MAX(T.END_DATE)
+				ELSE
+					NULL
+				END AS END_DATE,
+				CASE
+			WHEN MAX(T.END_DATE) >= MIN(T.START_DATE) THEN
+				UNIX_TIMESTAMP(MAX(T.END_DATE)) - UNIX_TIMESTAMP(MIN(T.START_DATE))
+			ELSE
+				NULL
+			END AS EXEC_TIME
+			FROM
+				CM_JOB J
+			LEFT JOIN CM_GROUP G ON J.GROUP_ID = G.GROUP_ID
+			LEFT JOIN (
+				SELECT
+					L.JOB_ID,
+					COUNT(L.JOB_ID) JOB_NUM,
+					MAX(L.START_DATE) START_DATE,
+					MAX(L.END_DATE) END_DATE
+				FROM
+					(
+						SELECT
+							JOB_ID,
+							MIN(C_DATE) AS START_DATE,
+							MAX(C_DATE) AS END_DATE
+						FROM
+							CM_JOB_LOG
+						WHERE
+							DATE_FORMAT(C_DATE, '%Y%m%d') = DATE_FORMAT(NOW(), '%Y%m%d')
+						GROUP BY
+							CONSOLE_FILE
+					) L
+				GROUP BY
+					L.JOB_ID
+			) T ON T.JOB_ID = J.JOB_ID
+			GROUP BY
+				J.GROUP_ID
+			) S ON S.GROUP_ID = A.GROUP_ID
+			WHERE
+				A.IS_ENABLE = 1 
+			ORDER BY START_TIME ASC
+	   ]]>
+	   
+	   <!-- 
+	   update by jianglm1
+	   
+	   WHERE
+				 L.LEVEL_NAME = 'DM_Report' AND A.IS_ENABLE = 1 
+			ORDER BY START_TIME ASC
+		 -->
+	</select>
+	
+	<!-- 
+	<select id="out1500Time" resultMap="export">
+		<![CDATA[
+		  SELECT
+		        TP.NAME AS TOPIC_NAME,
+				G.G_NAME GROUP_NAME,
+				J.JOB_NAME JOB_NAME,
+				T.START_DATE START_TIME,
+				T.END_DATE END_TIME,
+				T.EXEC_TIME JOB_TODAY_TIME,
+				C.`NAME` USER_NAME
+			FROM
+				CM_JOB J
+			LEFT JOIN CM_GROUP G ON J.GROUP_ID = G.GROUP_ID
+			LEFT JOIN CM_TOPIC TP ON G.TOPIC_ID=TP.TOPIC_ID
+			LEFT JOIN CM_CHARGOR C ON C.ID = J.CHARGOR_ID
+			LEFT JOIN (
+				SELECT
+					L.JOB_ID,
+					MAX(L.START_DATE) START_DATE,
+					CASE
+				WHEN MAX(L.END_DATE) >= MAX(L.START_DATE) THEN
+					MAX(L.END_DATE)
+				ELSE
+					NULL
+				END AS END_DATE,
+				CASE
+			WHEN MAX(L.END_DATE) >= MAX(L.START_DATE) THEN
+				UNIX_TIMESTAMP(MAX(L.END_DATE)) - UNIX_TIMESTAMP(MAX(L.START_DATE))
+			ELSE
+				NULL
+			END AS EXEC_TIME
+			FROM
+				(
+					SELECT
+						JOB_ID,
+						MIN(C_DATE) AS START_DATE,
+						MAX(C_DATE) AS END_DATE
+					FROM
+						CM_JOB_LOG
+					WHERE
+						DATE_FORMAT(C_DATE, '%Y%m%d') = DATE_FORMAT(NOW(), '%Y%m%d')
+					GROUP BY
+						CONSOLE_FILE
+				) L
+			GROUP BY
+				L.JOB_ID
+			) T ON T.JOB_ID = J.JOB_ID
+			WHERE
+				T.EXEC_TIME > 1500
+			ORDER BY T.EXEC_TIME DESC  
+	   ]]>
+	</select>
+	 -->
+	 
+	<select id="out1500Time" resultMap="export">
+		<![CDATA[
+		   SELECT
+				TP. NAME AS TOPIC_NAME,
+				G.G_NAME AS GROUP_NAME,
+				J.JOB_NAME AS JOB_NAME,
+				T.START_DATE AS START_TIME,
+				T.END_DATE AS END_TIME,
+				T.EXEC_TIME AS JOB_TODAY_TIME,
+				T2.EXEC_TIME AS JOB_YES_TIME,
+				T3.EXEC_TIME AS JOB_DBY_TIME,
+				C.`NAME` AS USER_NAME
+			FROM
+				CM_JOB J
+			LEFT JOIN CM_GROUP G ON J.GROUP_ID = G.GROUP_ID
+			LEFT JOIN CM_TOPIC TP ON G.TOPIC_ID = TP.TOPIC_ID
+			LEFT JOIN CM_CHARGOR C ON C.ID = J.CHARGOR_ID
+			LEFT JOIN (
+				SELECT
+					L.JOB_ID,
+					MAX(L.START_DATE) START_DATE,
+					CASE
+				WHEN MAX(L.END_DATE) >= MAX(L.START_DATE) THEN
+					MAX(L.END_DATE)
+				ELSE
+					NULL
+				END AS END_DATE,
+				CASE
+			WHEN MAX(L.END_DATE) >= MAX(L.START_DATE) THEN
+				UNIX_TIMESTAMP(MAX(L.END_DATE)) - UNIX_TIMESTAMP(MAX(L.START_DATE))
+			ELSE
+				NULL
+			END AS EXEC_TIME
+			FROM
+				(
+					SELECT
+						JOB_ID,
+						MIN(C_DATE) AS START_DATE,
+						MAX(C_DATE) AS END_DATE
+					FROM
+						CM_JOB_LOG
+					WHERE
+						DATE_FORMAT(C_DATE, '%Y%m%d') = DATE_FORMAT(NOW(), '%Y%m%d')
+					GROUP BY
+						CONSOLE_FILE
+				) L
+			GROUP BY
+				L.JOB_ID
+			) T ON T.JOB_ID = J.JOB_ID
+			LEFT JOIN (
+				SELECT
+					L.JOB_ID,
+					MAX(L.START_DATE) START_DATE,
+					CASE
+				WHEN MAX(L.END_DATE) >= MAX(L.START_DATE) THEN
+					MAX(L.END_DATE)
+				ELSE
+					NULL
+				END AS END_DATE,
+				CASE
+			WHEN MAX(L.END_DATE) >= MAX(L.START_DATE) THEN
+				UNIX_TIMESTAMP(MAX(L.END_DATE)) - UNIX_TIMESTAMP(MAX(L.START_DATE))
+			ELSE
+				NULL
+			END AS EXEC_TIME
+			FROM
+				(
+					SELECT
+						JOB_ID,
+						MIN(C_DATE) AS START_DATE,
+						MAX(C_DATE) AS END_DATE
+					FROM
+						CM_JOB_LOG
+					WHERE
+						DATE_FORMAT(C_DATE, '%Y%m%d') = DATE_FORMAT(ADDDATE(NOW() ,- 1), '%Y%m%d')
+					GROUP BY
+						CONSOLE_FILE
+				) L
+			GROUP BY
+				L.JOB_ID
+			) T2 ON T2.JOB_ID = J.JOB_ID
+			LEFT JOIN (
+				SELECT
+					L.JOB_ID,
+					MAX(L.START_DATE) START_DATE,
+					CASE
+				WHEN MAX(L.END_DATE) >= MAX(L.START_DATE) THEN
+					MAX(L.END_DATE)
+				ELSE
+					NULL
+				END AS END_DATE,
+				CASE
+			WHEN MAX(L.END_DATE) >= MAX(L.START_DATE) THEN
+				UNIX_TIMESTAMP(MAX(L.END_DATE)) - UNIX_TIMESTAMP(MAX(L.START_DATE))
+			ELSE
+				NULL
+			END AS EXEC_TIME
+			FROM
+				(
+					SELECT
+						JOB_ID,
+						MIN(C_DATE) AS START_DATE,
+						MAX(C_DATE) AS END_DATE
+					FROM
+						CM_JOB_LOG
+					WHERE
+						DATE_FORMAT(C_DATE, '%Y%m%d') = DATE_FORMAT(ADDDATE(NOW() ,- 2), '%Y%m%d')
+					GROUP BY
+						CONSOLE_FILE
+				) L
+			GROUP BY
+				L.JOB_ID
+			) T3 ON T3.JOB_ID = J.JOB_ID
+			WHERE
+				T.EXEC_TIME > 1500
+			ORDER BY
+				T.EXEC_TIME DESC  
+	   ]]>
+	</select>
+	
+	<select id="forbiddenJob" resultMap="export">
+		<![CDATA[
+		  	SELECT
+				T.NAME AS TOPIC_NAME,
+				G.G_NAME AS GROUP_NAME,
+				J.JOB_NAME AS JOB_NAME,
+				G.IS_ENABLE AS GROUP_IS_ENABLE,
+				J.IS_ENABLE AS JOB_IS_ENABLE,
+				C.`NAME` AS USER_NAME
+			FROM
+				CM_JOB J
+			LEFT JOIN CM_GROUP G ON G.GROUP_ID = J.GROUP_ID
+			LEFT JOIN CM_TOPIC T ON G.TOPIC_ID = T.TOPIC_ID
+			LEFT JOIN CM_CHARGOR C ON C.ID = J.CHARGOR_ID
+			WHERE
+				J.IS_ENABLE = 0
+			OR G.IS_ENABLE = 0
+			ORDER BY
+				G.G_NAME
+	   ]]>
+	</select>
+	
+	<select id="errorJob" resultMap="export">
+		<![CDATA[
+	  	   SELECT
+	  	        T.NAME AS TOPIC_NAME,
+				G.G_NAME AS GROUP_NAME,
+				J.JOB_NAME AS JOB_NAME,
+				T.START_DATE AS START_TIME,
+				CASE
+			WHEN T.END_DATE > T.START_DATE THEN
+				T.END_DATE
+			ELSE
+				NULL
+			END AS END_TIME,
+			 CASE
+			WHEN T.END_DATE >= T.START_DATE THEN
+				UNIX_TIMESTAMP(T.END_DATE) - UNIX_TIMESTAMP(T.START_DATE)
+			ELSE
+				NULL
+			END AS JOB_TODAY_TIME,
+			 C.`NAME` AS USER_NAME
+			FROM
+				CM_JOB J
+			LEFT JOIN CM_GROUP G ON J.GROUP_ID = G.GROUP_ID
+			LEFT JOIN CM_TOPIC T ON G.TOPIC_ID=T.TOPIC_ID
+			LEFT JOIN CM_CHARGOR C ON J.CHARGOR_ID = C.ID
+			LEFT JOIN (
+				SELECT
+					GROUP_ID,
+					STATE,
+					JOB_ID
+				FROM
+					V_CM_JOB_STATE
+			) VS ON VS.JOB_ID = J.JOB_ID
+			LEFT JOIN (
+				SELECT
+					L.JOB_ID,
+					MAX(L.START_DATE) START_DATE,
+					MAX(L.END_DATE) END_DATE
+				FROM
+					(
+						SELECT
+							JOB_ID,
+							MIN(C_DATE) AS START_DATE,
+							MAX(C_DATE) AS END_DATE
+						FROM
+							CM_JOB_LOG
+						GROUP BY
+							CONSOLE_FILE
+					) L
+				GROUP BY
+					L.JOB_ID
+			) T ON T.JOB_ID = J.JOB_ID
+			WHERE
+				VS.STATE = 3
+			ORDER BY
+			    START_TIME ASC,
+				J.ORDER_NO ASC,
+				J.JOB_NAME
+	   ]]>
+	</select>
+	
+	<select id="jobNum" resultType="int">
+		<![CDATA[
+		    SELECT
+				COUNT(DISTINCT J.JOB_ID)
+			FROM
+				CM_JOB J
+			JOIN CM_GROUP G ON J.GROUP_ID = G.GROUP_ID
+			JOIN CM_TOPIC T ON G.TOPIC_ID = T.TOPIC_ID
+	   ]]>
+	</select>
+	
+	<select id="waitNum" resultType="int">
+		<![CDATA[
+		    SELECT
+				COUNT(J.JOB_ID)
+			FROM
+				CM_JOB J
+			LEFT JOIN (
+				SELECT
+					GROUP_ID,
+					STATE,
+					JOB_ID
+				FROM
+					V_CM_JOB_STATE
+			) VS ON VS.JOB_ID = J.JOB_ID
+			WHERE
+				VS.STATE = 1
+			OR VS.STATE = 0
+			ORDER BY
+				J.ORDER_NO ASC,
+				J.JOB_NAME
+	   ]]>
+	</select>
+	
+	<select id="successNum" resultType="int">
+		<![CDATA[
+		    SELECT
+				COUNT(J.JOB_ID)
+			FROM
+				CM_JOB J
+			LEFT JOIN (
+				SELECT
+					GROUP_ID,
+					STATE,
+					JOB_ID
+				FROM
+					V_CM_JOB_STATE
+			) VS ON VS.JOB_ID = J.JOB_ID
+			WHERE
+				VS.STATE = 5
+	   ]]>
+	</select>
+	
+	<insert id="add" parameterType="com.meicloud.model.Tool" keyProperty="toolId">
+	   <selectKey resultType="int" keyProperty="toolId" order="AFTER" >
+	      SELECT LAST_INSERT_ID() AS toolId
+	   </selectKey>
+	    INSERT INTO CM_TOOL (
+			TOOL_NAME,
+			TOOL_URL
+		)
+		VALUES
+		(
+			#{toolName},
+			#{toolUrl}
+		) 
+	</insert>
+	
+	<select id="list" resultMap="tool">
+	   <![CDATA[
+	   		SELECT TOOL_ID,TOOL_NAME,TOOL_URL,`DESC` FROM CM_TOOL WHERE IS_ENABLE=1 ORDER BY ORDER_NO ASC
+	   ]]>
+	</select>
+
+	<delete id="delete" parameterType="com.meicloud.model.Tool">
+		 <![CDATA[
+	   		DELETE FROM CM_TOOL WHERE TOOL_ID = #{toolId}
+	     ]]>
+	</delete>
+</mapper> 

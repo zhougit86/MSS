@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.meicloud.dao.GroupJobReferMapper">
+
+	<resultMap id="groupJobRefer" type="com.meicloud.model.GroupJobRefer">
+	  <result property="referId" column="REFER_ID" jdbcType="INTEGER" javaType="java.lang.Integer"/>
+	  <result property="jobId" column="JOB_ID" jdbcType="INTEGER" javaType="java.lang.Integer"/>
+	  <result property="jobName" column="JOB_NAME" jdbcType="VARCHAR" javaType="java.lang.String"/>
+	  <result property="groupId" column="GROUP_ID" jdbcType="INTEGER" javaType="java.lang.Integer"/>
+	  <result property="createDate" column="C_DATE" jdbcType="TIMESTAMP" javaType="java.util.Date"/>
+	</resultMap>
+	
+	<resultMap id="groupJobReferOption" type="com.meicloud.model.GroupJobReferOption">
+	  <result property="jobId" column="JOB_ID" jdbcType="INTEGER" javaType="java.lang.Integer"/>
+	  <result property="groupId" column="GROUP_ID" jdbcType="INTEGER" javaType="java.lang.Integer"/>
+	  <result property="groupName" column="G_NAME" jdbcType="VARCHAR" javaType="java.lang.String"/>
+	  <result property="jobName" column="JOB_NAME" jdbcType="VARCHAR" javaType="java.lang.String"/>
+	</resultMap>
+	
+	<insert id="add" parameterType="com.meicloud.model.GroupJobRefer" keyProperty="referId">
+	   <selectKey resultType="int" keyProperty="referId" order="AFTER" >
+	      SELECT LAST_INSERT_ID() AS referId
+	   </selectKey>
+	   insert into CM_GROUP_JOB_REFER(
+		   	JOB_ID,
+		   	GROUP_ID,
+		   	C_DATE
+	   ) 
+	   values(
+		   	#{jobId},
+		   	#{groupId},
+		   	NOW()
+	   )
+	</insert>
+	
+	<select id="getByGroupId" parameterType="int" resultMap="groupJobRefer">
+		SELECT
+			R.REFER_ID,
+			R.JOB_ID,
+			J.JOB_NAME,
+			R.GROUP_ID,
+			R.C_DATE
+		FROM
+			cm_group_job_refer R
+			LEFT JOIN cm_job J ON  R.JOB_ID = J.JOB_ID
+		WHERE
+			R.GROUP_ID=#{groupId}
+	</select>
+	
+	<delete id="deleteByGroupId" parameterType="int">
+	     delete from CM_GROUP_JOB_REFER where GROUP_ID=#{groupId}
+	</delete>
+	
+	<delete id="deleteByJobId" parameterType="int">
+	     delete from CM_GROUP_JOB_REFER where JOB_ID=#{jobId}
+	</delete>
+	
+	<select id="getGroupEditReferOption" resultMap="groupJobReferOption" parameterType="int">
+		SELECT
+			G.GROUP_ID,	G.G_NAME,	J.JOB_ID,	J.JOB_NAME,	G.LEVEL_ID
+		FROM
+			cm_group G
+		JOIN cm_job J ON G.GROUP_ID = J.GROUP_ID
+		WHERE 1 = 1
+		<if test="_parameter != null">AND g.GROUP_ID=#{groupId}</if>
+		ORDER BY
+			G.LEVEL_ID ASC,	G.G_NAME ASC
+	</select>
+	
+</mapper>

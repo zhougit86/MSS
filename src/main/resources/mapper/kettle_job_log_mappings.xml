@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.meicloud.dao.KettleJobLogMapper">
+
+	<resultMap id="jobLog" type="com.meicloud.model.KettleJobLog">
+	   <result property="idJob" column="ID_JOB" jdbcType="INTEGER" javaType="java.lang.Integer"/>
+	   <result property="channelId" column="CHANNEL_ID" jdbcType="VARCHAR" javaType="java.lang.String"/>
+	   <result property="jobName" column="JOBNAME" jdbcType="VARCHAR" javaType="java.lang.String"/>
+	   <result property="status" column="STATUS" jdbcType="VARCHAR" javaType="java.lang.String"/>
+	   <result property="linesRead" column="LINES_READ" jdbcType="INTEGER" javaType="java.lang.Integer"/>
+	   <result property="linesWritten" column="LINES_WRITTEN" jdbcType="INTEGER" javaType="java.lang.Integer"/>
+	   <result property="linesUpdate" column="LINES_UPDATED" jdbcType="INTEGER" javaType="java.lang.Integer"/>
+	   <result property="linesInput" column="LINES_INPUT" jdbcType="INTEGER" javaType="java.lang.Integer"/>
+	   <result property="linesOutput" column="LINES_OUTPUT" jdbcType="INTEGER" javaType="java.lang.Integer"/>
+	   <result property="linesRejected" column="LINES_REJECTED" jdbcType="INTEGER" javaType="java.lang.Integer"/>
+	   <result property="errors" column="ERRORS" jdbcType="INTEGER" javaType="java.lang.Integer"/>
+	   <result property="startDate" column="STARTDATE" jdbcType="TIMESTAMP" javaType="java.util.Date"/>
+	   <result property="endDate" column="ENDDATE" jdbcType="TIMESTAMP" javaType="java.util.Date"/>
+	   <result property="logDate" column="LOGDATE" jdbcType="TIMESTAMP" javaType="java.util.Date"/>
+	   <result property="depDate" column="DEPDATE" jdbcType="TIMESTAMP" javaType="java.util.Date"/>
+	   <result property="replayDate" column="REPLAYDATE" jdbcType="TIMESTAMP" javaType="java.util.Date"/>
+	   <result property="groupName" column="G_NAME" jdbcType="VARCHAR" javaType="java.lang.String"/>
+	</resultMap>
+	
+	<select id="getListByJobName" parameterType="java.lang.String" resultMap="jobLog">
+	<![CDATA[
+		select
+			DISTINCT
+			A.ID_JOB,
+			A.CHANNEL_ID,
+			A.JOBNAME,
+			A.STATUS,
+			A.LINES_READ,
+			A.LINES_WRITTEN,
+			A.LINES_UPDATED,
+			A.LINES_INPUT,
+			A.LINES_OUTPUT,
+			A.LINES_REJECTED,
+			A.ERRORS,
+			A.STARTDATE,
+			A.ENDDATE,
+			A.LOGDATE,
+			A.DEPDATE,
+			A.REPLAYDATE,
+			G.G_NAME
+		from
+		    CM_KETTLE_JOB_LOG A
+        LEFT JOIN CM_JOB J ON J.JOB_NAME = A.JOBNAME
+        LEFT JOIN CM_GROUP G ON G.GROUP_ID = J.GROUP_ID
+		where
+			A.JOBNAME=#{jobName}
+		order by
+			A.LOGDATE desc
+	]]>
+	</select>
+	
+	<select id="getLogTextByJobName" parameterType="java.lang.String" resultType="java.lang.String">
+	<![CDATA[
+			SELECT 
+				KJL.LOG_FIELD 
+			FROM
+				CM_KETTLE_JOB_LOG KJL
+			LEFT JOIN CM_JOB J ON J.JOB_NAME = KJL.JOBNAME
+			LEFT JOIN CM_GROUP G ON G.GROUP_ID = J.GROUP_ID
+			WHERE KJL.JOBNAME = #{jobName}
+			AND DATE_FORMAT(G.U_DATE,'%Y%m%d%T') < DATE_FORMAT(KJL.LOGDATE, '%Y%m%d%T')
+			AND DATE_FORMAT(KJL.LOGDATE, '%Y%m%d')=DATE_FORMAT(NOW(), '%Y%m%d')
+		]]>
+	</select> 
+
+	<delete id="deleteByJobId" parameterType="int">
+       delete from CM_KETTLE_JOB_LOG where JOBNAME in (select J.JOB_NAME from CM_JOB J where J.JOB_ID=#{jobId})	   
+	</delete>
+	
+	<delete id="deleteByGroupId" parameterType="int">
+       delete from CM_KETTLE_JOB_LOG where JOBNAME in (select J.JOB_NAME from CM_JOB J where J.GROUP_ID=#{groupId})	   
+	</delete>
+	
+</mapper>

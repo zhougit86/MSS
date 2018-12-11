@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.meicloud.dao.TagsMapper">
+
+	<resultMap id="tags" type="com.meicloud.model.Tags">
+		<result property="tagId" column="TID" jdbcType="INTEGER" javaType="int"/>
+		<result property="tagName" column="TNAME" jdbcType="VARCHAR" javaType="java.lang.String"/>
+		<result property="tagNum" column="TNUM" jdbcType="INTEGER" javaType="int"/>
+		<result property="groupId" column="GROUP_ID" jdbcType="INTEGER" javaType="int"/>
+		<result property="referId" column="ID" jdbcType="INTEGER" javaType="int"/>
+		<result property="queueId" column="QUEUE_ID" jdbcType="VARCHAR" javaType="java.lang.String"/>
+	</resultMap>
+
+
+	<insert id="addTag" parameterType="com.meicloud.model.Tags" keyProperty="tagId">
+	   <selectKey resultType="int" keyProperty="tagId" order="AFTER" >
+	      SELECT LAST_INSERT_ID() AS tagId
+	   </selectKey>
+	   INSERT INTO CM_TAGS (
+			TNAME,
+		    QUEUE_ID,
+			TNUM
+		)
+		VALUES
+		(
+			#{tagName},
+		    #{queueId},
+			#{tagNum}
+		) 
+	</insert>
+	
+	<insert id="addTagRefer" parameterType="com.meicloud.model.Tags" keyProperty="referId">
+	   <selectKey resultType="int" keyProperty="referId" order="AFTER" >
+	      SELECT LAST_INSERT_ID() AS referId
+	   </selectKey>
+	   INSERT INTO CM_TAGS_REFER (
+			GROUP_ID,
+			TID
+		)
+		VALUES
+		(
+			#{groupId},
+			#{tagId}	
+		) 
+	</insert>
+
+	<select id="getByNameAndQueueId" resultType="integer"  parameterType="com.meicloud.model.Tags">
+	    SELECT
+			DISTINCT  R.GROUP_ID
+		FROM
+		CM_TAGS T
+			LEFT JOIN CM_TAGS_REFER R ON R.TID=T.TID
+		WHERE
+			UPPER(T.TNAME) = UPPER(#{tagName})
+			AND T.QUEUE_ID = #{queueId}
+	</select>
+
+
+	<select id="getByName" resultMap="tags">
+	   <![CDATA[
+	    SELECT
+			TID,
+			TNAME,
+			QUEUE_ID,
+			TNUM
+		FROM
+			cm_tags
+		WHERE
+			UPPER(TNAME) = UPPER(#{tagName})
+			AND QUEUE_ID = #{queueId}
+	   ]]>
+	</select>
+	
+	<select id="list" resultMap="tags">
+	   <![CDATA[
+	    SELECT
+			T.TID,
+			T.TNAME,
+			T.QUEUE_ID,
+			COUNT(DISTINCT G.GROUP_ID) AS TNUM
+		FROM
+			cm_tags T
+		JOIN cm_tags_refer TR ON T.TID = TR.TID
+		JOIN cm_group G ON TR.GROUP_ID = G.GROUP_ID
+		GROUP BY
+			T.TID
+		ORDER BY
+			T.TNAME
+	   ]]>
+	</select>
+
+	<select id="findByqueueIds" resultMap="tags" parameterType="java.util.List">
+		SELECT
+		T.TID,
+		T.TNAME,
+		T.QUEUE_ID,
+		COUNT(G.GROUP_ID) AS TNUM
+		FROM
+		cm_tags T
+		JOIN cm_tags_refer TR ON T.TID = TR.TID
+		JOIN cm_group G ON TR.GROUP_ID = G.GROUP_ID
+		WHERE 1=1
+		<if test="list!=null and list.size() > 0">
+			AND
+		T.QUEUE_ID IN
+			<foreach item="item" index="index" collection="list" open="(" separator="," close=")">
+				#{item}
+			</foreach>
+		</if>
+		GROUP BY
+			T.TNAME,T.QUEUE_ID
+
+	</select>
+
+<select id="countRefer" parameterType="com.meicloud.model.Tags" resultType="int">
+	   <![CDATA[
+	    SELECT
+			COUNT(ID)
+		FROM
+			cm_tags_refer
+		WHERE
+			GROUP_ID = #{groupId}
+		AND TID = #{tagId}
+	   ]]>
+	</select>
+	
+	<delete id="delete" parameterType="int">
+	   <![CDATA[
+	       delete from cm_tags where tid=#{tid}
+	   ]]>
+	</delete>
+
+</mapper>

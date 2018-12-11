@@ -1,0 +1,229 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.meicloud.dao.JobExcelMapper">
+
+	<resultMap id="jobExcelTransport" type="com.meicloud.model.JobExcelTransport">
+	  <result property="groupName" column="G_NAME" jdbcType="VARCHAR" javaType="java.lang.String"/>
+	  <result property="jobName" column="JOB_NAME" jdbcType="VARCHAR" javaType="java.lang.String"/>
+	  <result property="svnFile" column="SVN_FILE" jdbcType="VARCHAR" javaType="java.lang.String"/>
+	  <result property="retryName" column="R_NAME" jdbcType="VARCHAR" javaType="java.lang.String"/>
+	  <result property="debugLevel" column="DEBUG_LEVEL" jdbcType="VARCHAR" javaType="java.lang.String"/>
+	  <result property="appendParams" column="APPEND_PARAMS" jdbcType="VARCHAR" javaType="java.lang.String"/>
+	  <result property="orderNo" column="ORDER_NO" jdbcType="INTEGER" javaType="int"/>	
+	  <result property="runPriority" column="RUN_PRIORITY" jdbcType="INTEGER" javaType="int"/>	  
+	  <result property="enable" column="IS_ENABLE" jdbcType="TINYINT" javaType="boolean"/>
+	  <result property="online" column="IS_ONLINE" jdbcType="TINYINT" javaType="boolean"/>
+	  <result property="chargorName" column="C_NAME" jdbcType="VARCHAR" javaType="java.lang.String"/>	 
+	</resultMap>
+	
+	<resultMap id="nameValuePair" type="com.meicloud.model.NameValuePair">
+		<result property="id" column="ID" jdbcType="INTEGER" javaType="int"/>
+		<result property="value" column="VALUE" jdbcType="VARCHAR" javaType="java.lang.String"/>
+		<result property="name" column="NAME" jdbcType="VARCHAR" javaType="java.lang.String"/>
+	</resultMap>
+	
+	<select id="jobList" resultMap="jobExcelTransport">
+	<![CDATA[
+		SELECT
+			G.G_NAME,
+			J.JOB_NAME,
+			J.SVN_FILE,
+			R.R_NAME,
+			J.DEBUG_LEVEL,
+			J.APPEND_PARAMS,
+			J.ORDER_NO,
+			J.RUN_PRIORITY,
+			J.IS_ENABLE,
+			J.IS_ONLINE,
+			C.`NAME` AS C_NAME
+		FROM
+			cm_job J
+		JOIN cm_group G ON J.GROUP_ID = G.GROUP_ID
+		JOIN cm_chargor C ON J.CHARGOR_ID = C.ID
+		JOIN cm_job_retry_rule R ON J.RETRY_ID = R.RETRY_ID
+		ORDER BY
+			JOB_NAME ASC
+	 ]]>
+	</select>
+	
+	<select id="chargorOptionList"  resultMap="nameValuePair">
+	<![CDATA[
+		SELECT
+			ID,
+			`NAME` AS `VALUE`
+		FROM
+			cm_chargor
+	 ]]>
+	</select>
+	
+	<select id="groupOptionList"  resultMap="nameValuePair">
+	<![CDATA[
+		SELECT
+			GROUP_ID AS ID,
+			G_NAME AS `VALUE`
+		FROM
+			cm_group
+	 ]]>
+	</select>
+	
+	<select id="retryRuleOptionList"  resultMap="nameValuePair">
+	<![CDATA[
+		SELECT
+			RETRY_ID AS ID,
+			R_NAME AS `VALUE`
+		FROM
+			cm_job_retry_rule
+	 ]]>
+	</select>
+	
+	<select id="checkBatchCUD" resultMap="nameValuePair" parameterType="java.lang.String">
+		SELECT
+			J.JOB_ID AS ID,
+			J.JOB_NAME AS `VALUE`,
+			G.G_NAME AS `NAME`
+		FROM
+			cm_job J
+		JOIN cm_group G ON J.GROUP_ID = G.GROUP_ID 
+		where J.JOB_NAME IN
+		<foreach collection="array" item="item" index="index" open="(" separator="," close=")">  
+			#{item}
+    	</foreach>
+	</select>
+	
+	<insert id="addJobBatch" useGeneratedKeys="true" parameterType="java.util.List">
+		insert into cm_job (
+				GROUP_ID,
+			 	CHARGOR_ID,
+			 	JOB_NAME,
+				ORDER_NO,
+				LOG_FILE,
+				SERVER_FILE,
+				SVN_FILE,
+				IS_ENABLE,
+				C_DATE,
+				U_DATE,
+				RETRY_ID,
+				C_USER,
+				U_USER,
+				DEBUG_LEVEL,
+				IS_ONLINE,
+				APPEND_PARAMS,
+				RUN_PRIORITY
+				)
+			values
+		<foreach collection="list" item="item" index="index" separator=",">  
+				(
+				#{item.groupId,jdbcType=INTEGER},
+				#{item.chargorId,jdbcType=INTEGER},
+				#{item.jobName,jdbcType=VARCHAR},
+				#{item.orderNo,jdbcType=INTEGER},
+				#{item.logFile,jdbcType=VARCHAR},
+				#{item.serverFile,jdbcType=VARCHAR},
+				#{item.svnFile,jdbcType=VARCHAR},
+				#{item.enable,jdbcType=TINYINT},
+				NOW(),
+				NOW(),
+				#{item.retryId,jdbcType=VARCHAR},
+				#{item.cUser,jdbcType=VARCHAR},
+				#{item.uUser,jdbcType=VARCHAR},
+				#{item.debugLevel,jdbcType=VARCHAR},
+				#{item.online,jdbcType=TINYINT},
+				#{item.appendParams,jdbcType=VARCHAR},
+				#{item.runPriority,jdbcType=INTEGER}
+				)
+   		</foreach>
+	</insert>
+	
+	<insert id="copy2CHLog" parameterType="java.lang.String">
+		   INSERT INTO cm_job_chlog_20160728 (
+					JOB_ID,
+					GROUP_ID,
+					JOB_NAME,
+					SERVER_FILE,
+					LOG_FILE,
+					SVN_FILE,
+					CHARGOR_ID,
+					IS_ENABLE,
+					ORDER_NO,
+					DEBUG_LEVEL,
+					`DESC`,
+					C_USER,
+					U_USER,
+					C_DATE,
+					U_DATE,
+					R_IS_TIME,
+					R_TIMEOUT,
+					R_IS_ERROR,
+					R_INTERVAL_TIME,
+					R_ERROR_INTERVAL_NUM,
+					R_TIMEOUT_INTERVAL_NUM,
+					LOG_RESON,
+					LOG_DATE,
+					APPEND_PARAMS,
+					RUN_PRIORITY
+				)SELECT
+					J.JOB_ID,
+					J.GROUP_ID,
+					J.JOB_NAME,
+					J.SERVER_FILE,
+					J.LOG_FILE,
+					J.SVN_FILE,
+					J.CHARGOR_ID,
+					J.IS_ENABLE,
+					J.ORDER_NO,
+					J.DEBUG_LEVEL,
+					J.`DESC`,
+					J.C_USER,
+					J.U_USER,
+					J.C_DATE,
+					J.U_DATE,
+					JR.R_IS_TIME,
+					JR.R_TIMEOUT,
+					JR.R_IS_ERROR,
+					JR.R_INTERVAL_TIME,
+					JR.R_ERROR_INTERVAL_NUM,
+					JR.R_TIMEOUT_INTERVAL_NUM,
+					'Excel文件批量导入时被更新或者删除',
+					NOW(),
+					J.APPEND_PARAMS,
+					J.RUN_PRIORITY
+				FROM
+					cm_job J
+				JOIN cm_job_retry_rule JR ON J.RETRY_ID = JR.RETRY_ID
+				WHERE J.JOB_NAME IN
+		   <foreach collection="array" item="item" index="index" open="(" separator="," close=")">  
+                  #{item,jdbcType=VARCHAR} 
+           </foreach>
+	</insert>
+	
+	<update id="updateJobBatch" parameterType="java.util.List">
+		<foreach collection="list" item="item" index="index" open="" close="" separator=";">  
+              update cm_job   
+              <set>  
+                GROUP_ID=#{item.groupId},
+				SERVER_FILE=#{item.serverFile},
+				LOG_FILE=#{item.logFile},
+				SVN_FILE=#{item.svnFile},
+				CHARGOR_ID=#{item.chargorId},
+				IS_ENABLE=#{item.enable},
+				ORDER_NO=#{item.orderNo},
+				DEBUG_LEVEL=#{item.debugLevel},
+				U_USER=#{item.uUser},
+				U_DATE=NOW(),
+				RETRY_ID=#{item.retryId},
+				IS_ONLINE=#{item.online},
+				APPEND_PARAMS=#{item.appendParams},
+				RUN_PRIORITY=#{item.runPriority}
+              </set>  
+              where JOB_NAME = #{item.jobName}  
+         </foreach>
+	</update>
+	
+	<delete id="deleteJobBatch" parameterType="java.lang.String">
+		DELETE FROM	cm_job WHERE JOB_NAME IN
+		<foreach item="item" collection="array" open="(" separator="," close=")">
+			#{item}
+		</foreach>
+	</delete>
+	
+</mapper>

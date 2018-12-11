@@ -1,0 +1,120 @@
+      /* IE版本过低提醒弹框start */
+      .ie-up-bgcolor {
+        background-color: #55ADFC;
+      }
+      .pop-div-up-img {
+        height: 195px;
+        width: 100%;
+        ine-height: 195px;
+      }
+
+      .pop-div-up-img > div {
+        height: 183px;
+        width: 220px;
+        margin: 0 auto;
+        margin-top: 10px;
+        background: url('../img/ieUp-title.png') center no-repeat;
+
+      }
+      .pop-div-msg-up-title {
+        font-size: 24px;
+        color: white;
+        margin: 0 auto;
+        text-align: center;
+        font-weight: bold;
+      }
+      .pop-div-msg-up-content {
+        font-size: 14px;
+        color: white;
+        text-align: center;
+        margin-bottom: 15px;
+        letter-spacing: 2.4px;
+      }
+      .pop-div-msg-up-content > span {
+        display: inline-block;
+      }
+      .iefixUpUser{
+        margin-top: 30px;
+      }
+      .pop-div-up-btn-bottom {
+        width: 100%;
+        height: 124px;
+        background-color: #fff;
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        text-align: center;
+        line-height: 124px;
+      }
+      .pop-div-up-btn-bottom > div {
+        height: 52px;
+        width: 182px;
+        border: 1px solid #1c2d5f;
+        line-height: 52px;
+        text-align: center;
+        display: inline-block;
+        border-radius: 6px;
+        font-size: 14px;
+        color: #1c2d5f;
+      }
+      .pop-div-up-btn-bottom > div:HOVER {
+        background-color: #397EDB;
+        color: #fff;
+        border-color: #397EDB;
+      }
+
+      .pop-div-up-btn-bottom > div:HOVER > a{
+        color: #fff;
+      }
+      .pop-div-up-btn-bottom > div > a {
+        cursor: hand;
+        color: #31468A;
+      }
+      .marginLeft20 {
+        margin-left: 32px;
+      }
+      .iefix-icon-chrome {
+        height: 16px;
+        width: 16px;
+        background: url('../img/ieUp1.png') center no-repeat;
+        background-position: -212px -188px;
+      }
+      .iefix-icon-chrome-hover:hover > a > i {
+        background-position: -176px -188px;
+      }
+      .marginLeft20:hover > a > i {
+        background-position: -158px -188px;
+      }
+      .iefix-icon-qqHover:hover > a > i {
+        background-position: 0px -207px;
+      }
+
+      .iefix-icon-ff {
+        height: 16px;
+        width: 16px;
+        background: url('../img/ieUp1.png') center no-repeat;
+        background-position: -194px -170px;
+      }
+
+      .iefix-icon-qq {
+        height: 16px;
+        width: 16px;
+        background: url('../img/ieUp1.png') center no-repeat;
+        background-position: -140px -188px;
+      }
+
+      .iefix-icon-chrome,.iefix-icon-qq,.iefix-icon-ff {
+        display: inline-block;
+        vertical-align: middle;
+      }
+      .infoZCXP {
+        position: absolute;
+        color: #b2b2b2;
+        display: block;
+        right: 70px;
+        top: -43px;
+        z-index: 1;
+        height: 1px;
+        font-size: 12px;
+      }
+      /* IE版本过低提醒弹框end */

@@ -1,0 +1,208 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.meicloud.dao.JobRetryRuleMapper">
+
+	<resultMap id="retryRule" type="com.meicloud.model.RetryRule">
+		<result property="retryId" column="RETRY_ID" jdbcType="INTEGER"
+			javaType="java.lang.Integer" />
+		<result property="retryName" column="R_NAME" jdbcType="VARCHAR"
+			javaType="java.lang.String" />
+		<result property="retryDesc" column="R_DESC" jdbcType="VARCHAR"
+			javaType="java.lang.String" />
+		<result property="isTime" column="R_IS_TIME" jdbcType="TINYINT"
+			javaType="boolean" />
+		<result property="timeOut" column="R_TIMEOUT" jdbcType="INTEGER"
+			javaType="java.lang.Integer" />
+		<result property="isError" column="R_IS_ERROR" jdbcType="TINYINT"
+			javaType="boolean" />
+		<result property="intervalTime" column="R_INTERVAL_TIME" jdbcType="INTEGER"
+			javaType="java.lang.Integer" />
+		<result property="errorIntervalNum" column="R_ERROR_INTERVAL_NUM" jdbcType="INTEGER"
+			javaType="java.lang.Integer" />
+		<result property="timeIntervalNum" column="R_TIMEOUT_INTERVAL_NUM" jdbcType="INTEGER"
+			javaType="java.lang.Integer" />
+	</resultMap>
+	
+	<resultMap type="com.meicloud.model.Server" id="queryServerInfo">
+    	<result property="id" column="ID" jdbcType="INTEGER" javaType="int"/>
+	   <result property="state" column="STATE" jdbcType="INTEGER" javaType="int"/>
+	   <result property="createDate" column="C_DATE" jdbcType="TIMESTAMP" javaType="java.util.Date"/>
+	   <result property="updateDate" column="U_DATE" jdbcType="TIMESTAMP" javaType="java.util.Date"/>
+       <result property="ip" column="IP" jdbcType="VARCHAR" javaType="java.lang.String"/>
+       <result property="type" column="TYPE" jdbcType="VARCHAR" javaType="java.lang.String"/>
+       <result property="runJobCount" column="RUN_JOB_COUNT" jdbcType="INTEGER" javaType="int"/>
+       <result property="appPort" column="APP_PORT" jdbcType="VARCHAR" javaType="java.lang.String"/>
+       <result property="desc" column="DESC" jdbcType="VARCHAR" javaType="java.lang.String"/>
+       <result property="queueId" column="QUEUE_ID" jdbcType="VARCHAR" javaType="java.lang.String"/>
+       <result property="queueName" column="QUEUE_NAME" jdbcType="VARCHAR" javaType="java.lang.String"/>
+       <result property="name" column="NAME" jdbcType="VARCHAR" javaType="java.lang.String"/>
+       <result property="perform" column="IS_PERFORM" jdbcType="BIT" javaType="java.lang.Boolean"/>
+       <result property="available" column="IS_AVAILABLE" jdbcType="BIT" javaType="java.lang.Boolean"/>
+    </resultMap>
+
+	<insert id="add" parameterType="com.meicloud.model.RetryRule" keyProperty="retryId">
+		<selectKey resultType="int" keyProperty="retryId" order="AFTER">
+			SELECT LAST_INSERT_ID() AS retryId
+		</selectKey>
+		INSERT INTO CM_JOB_RETRY_RULE (
+			R_NAME,
+			R_DESC,
+			R_IS_TIME,
+			R_TIMEOUT,
+			R_IS_ERROR,
+			R_INTERVAL_TIME,
+			R_ERROR_INTERVAL_NUM,
+			R_TIMEOUT_INTERVAL_NUM
+		)
+		values(
+			#{retryName,jdbcType=VARCHAR},
+			#{retryDesc,jdbcType=VARCHAR},
+			#{isTime,jdbcType=TINYINT},
+			#{timeOut,jdbcType=INTEGER},
+			#{isError,jdbcType=TINYINT},
+			#{intervalTime,jdbcType=INTEGER},
+			#{errorIntervalNum,jdbcType=INTEGER},
+			#{timeIntervalNum,jdbcType=INTEGER}
+		)
+	</insert>
+
+	<update id="update" parameterType="com.meicloud.model.RetryRule">
+	<![CDATA[
+		UPDATE CM_JOB_RETRY_RULE
+		SET  R_NAME=#{retryName,jdbcType=VARCHAR},
+			 R_DESC=#{retryDesc,jdbcType=VARCHAR},
+			 R_IS_TIME=#{isTime,jdbcType=TINYINT},
+			 R_TIMEOUT=#{timeOut,jdbcType=INTEGER},
+			 R_IS_ERROR=#{isError,jdbcType=TINYINT},
+			 R_INTERVAL_TIME=#{intervalTime,jdbcType=INTEGER},
+			 R_ERROR_INTERVAL_NUM=#{errorIntervalNum,jdbcType=INTEGER},
+			 R_TIMEOUT_INTERVAL_NUM=#{timeIntervalNum,jdbcType=INTEGER}
+		where RETRY_ID=#{retryId,jdbcType=INTEGER}
+	]]>
+	</update>
+
+	<select id="checkIfExists4New" parameterType="com.meicloud.model.RetryRule"
+		resultType="int">
+	<![CDATA[
+	   select 
+	      count(1)
+	   from 
+	      CM_JOB_RETRY_RULE 
+	   where 
+	      R_NAME=#{retryName}
+	   ]]>
+	</select>
+	
+	<select id="checkIfExists4Update" parameterType="com.meicloud.model.RetryRule"
+		resultType="int">
+		<![CDATA[
+		   select 
+		      count(1)
+		   from 
+		      CM_JOB_RETRY_RULE 
+		   where 
+		      R_NAME=#{retryName}
+		      AND RETRY_ID <> #{retryId}
+	   ]]>
+	</select>
+	
+	<delete id="delete" parameterType="int">
+		delete from CM_JOB_RETRY_RULE
+		where RETRY_ID = #{retryId}
+	</delete>
+
+	<select id="getById" parameterType="int" resultMap="retryRule">
+	<![CDATA[
+		SELECT
+			RETRY_ID,
+			R_NAME,
+			R_DESC,
+			R_IS_TIME,
+			R_TIMEOUT,
+			R_IS_ERROR,
+			R_INTERVAL_TIME,
+			R_ERROR_INTERVAL_NUM,
+			R_TIMEOUT_INTERVAL_NUM
+		FROM
+			CM_JOB_RETRY_RULE  
+		where RETRY_ID = #{retryId}
+	 ]]>
+	</select>
+	
+	<select id="getByRetryName" parameterType="java.lang.String" resultMap="retryRule">
+	<![CDATA[
+		SELECT
+			RETRY_ID,
+			R_NAME,
+			R_DESC,
+			R_IS_TIME,
+			R_TIMEOUT,
+			R_IS_ERROR,
+			R_INTERVAL_TIME,
+			R_ERROR_INTERVAL_NUM,
+			R_TIMEOUT_INTERVAL_NUM
+		FROM
+			CM_JOB_RETRY_RULE  
+		where R_NAME = #{retryName}
+	 ]]>
+	</select>
+
+	<select id="list" resultMap="retryRule">
+	   <![CDATA[
+			SELECT 
+				RETRY_ID,
+				R_NAME,
+				R_DESC,
+				R_IS_TIME,
+				R_TIMEOUT,
+				R_IS_ERROR,
+				R_INTERVAL_TIME,
+				R_ERROR_INTERVAL_NUM,
+				R_TIMEOUT_INTERVAL_NUM
+			FROM CM_JOB_RETRY_RULE 
+	   ]]>
+	</select>
+	
+	<select id="queryList" resultType="com.meicloud.model.RetryRule">
+		select 
+			retry_id as retryId,
+			r_name as retryName
+		from cm_job_retry_rule 
+	</select>
+	
+	<select id="queryCmServerUrl" resultType="string">
+		<![CDATA[
+			SELECT
+				CONCAT(
+					'http://',
+					IP,
+					':',
+					APP_PORT,
+					'/',
+					NAME
+				) AS URL
+			FROM
+				cm_server
+			WHERE
+				NAME = 'MSS_DE' and IS_PERFORM = 1 and STATE = 0 and IS_AVAILABLE = 1 limit 1
+		]]>
+	</select>
+	
+	<select id="getServerList" resultMap="queryServerInfo" parameterType="com.meicloud.model.Server">
+        SELECT
+			t.*
+		FROM
+			CM_SERVER t 
+		where 1=1 
+  	  <if test="available!=null">
+   		and t.IS_AVAILABLE=#{available}
+  	  </if>
+  	  <if test="type!=null">
+   		and t.TYPE=#{type}
+  	  </if>
+  	  <if test="state!=null">
+   		and t.STATE=#{state}
+  	  </if>
+    </select>
+	
+</mapper> 

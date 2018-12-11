@@ -1,0 +1,1030 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.meicloud.dao.GroupMapper">
+
+	<resultMap id="groupInfo" type="com.meicloud.model.Group">
+		<result property="groupId" column="GROUP_ID" jdbcType="INTEGER" javaType="java.lang.Integer"/>
+		<result property="groupName" column="G_NAME" jdbcType="VARCHAR" javaType="java.lang.String"/>
+	</resultMap>
+
+	<resultMap id="group" type="com.meicloud.model.Group">
+		<result property="groupId" column="GROUP_ID" jdbcType="INTEGER" javaType="java.lang.Integer"/>
+		<result property="levelId" column="LEVEL_ID" jdbcType="INTEGER" javaType="java.lang.Integer"/>
+		<result property="levelName" column="LEVEL_NAME" jdbcType="VARCHAR" javaType="java.lang.String"/>
+		<result property="subject" column="P_G_NAME" jdbcType="VARCHAR" javaType="java.lang.String"/>
+		<result property="groupName" column="G_NAME" jdbcType="VARCHAR" javaType="java.lang.String"/>
+		<result property="topicId" column="TOPIC_ID" jdbcType="INTEGER" javaType="java.lang.Integer"/>
+		<result property="enable" column="IS_ENABLE" jdbcType="TINYINT" javaType="boolean"/>
+		<result property="timeTrigger" column="IS_TIME_TRIGGER" jdbcType="TINYINT" javaType="boolean"/>
+		<result property="cron" column="CRON" jdbcType="VARCHAR" javaType="java.lang.String"/>
+		<result property="createDate" column="C_DATE" jdbcType="TIMESTAMP" javaType="java.util.Date"/>
+		<result property="updateDate" column="U_DATE" jdbcType="TIMESTAMP" javaType="java.util.Date"/>
+		<result property="desc" column="DESC" jdbcType="VARCHAR" javaType="java.lang.String"/>
+		<result property="levelOrderNo" column="LEVEL_ORDER_NO" jdbcType="INTEGER" javaType="java.lang.Integer"/>
+		<result property="referedGroupIds" column="REFERED_GROUP_IDS" jdbcType="VARCHAR" javaType="java.lang.String"/>
+		<result property="runGroupId" column="RUN_GROUP_ID" jdbcType="INTEGER" javaType="java.lang.Integer"/>
+		<result property="sordInGroup" column="IS_SORT_IN_GROUP" jdbcType="TINYINT" javaType="boolean"/>
+		<result property="errorJobContinueRun" column="IS_ERRORJOB_CONTINUE_RUN" jdbcType="TINYINT" javaType="boolean"/>
+		<result property="cUser" column="C_USER" jdbcType="VARCHAR" javaType="java.lang.String" />
+		<result property="uUser" column="U_USER" jdbcType="VARCHAR" javaType="java.lang.String" />
+		<result property="parallelLimit" column="PARALLEL_LIMIT" jdbcType="INTEGER" javaType="java.lang.Integer" />
+		<result property="execTime" column="EXEC_TIME" jdbcType="VARCHAR" javaType="java.lang.String" />
+		<result property="startDate" column="START_DATE" jdbcType="TIMESTAMP" javaType="java.util.Date" />
+		<result property="endDate" column="END_DATE" jdbcType="TIMESTAMP" javaType="java.util.Date" />
+		<result property="queueId" column="QUEUE_ID" jdbcType="VARCHAR" javaType="java.lang.String" />
+		<result property="queueName" column="QUEUE_NAME" jdbcType="VARCHAR" javaType="java.lang.String" />
+		<result property="nextFireTime" column="NEXT_FIRE_TIME" jdbcType="VARCHAR" javaType="java.lang.String" />
+	</resultMap>
+
+	<resultMap id="nvp" type="com.meicloud.model.NameValuePair">
+		<result property="id" column="ID" jdbcType="INTEGER" javaType="java.lang.Integer"/>
+		<result property="name" column="NAME" jdbcType="VARCHAR" javaType="java.lang.String"/>
+		<result property="value" column="VALUE" jdbcType="VARCHAR" javaType="java.lang.String"/>
+	</resultMap>
+
+	<!-- 新加组 -->
+	<insert id="add" parameterType="com.meicloud.model.Group" keyProperty="groupId">
+		<selectKey resultType="int" keyProperty="groupId" order="AFTER" >
+			SELECT LAST_INSERT_ID() AS groupId
+		</selectKey>
+		INSERT INTO CM_GROUP (
+		LEVEL_ID,
+		G_NAME,
+		IS_ENABLE,
+		IS_SORT_IN_GROUP,
+		IS_ERRORJOB_CONTINUE_RUN,
+		CRON,
+		C_DATE,
+		U_DATE,
+		REFERED_GROUP_IDS,
+		TOPIC_ID,
+		`DESC`,
+		C_USER,
+		U_USER,
+		PARALLEL_LIMIT,
+		IS_TIME_TRIGGER,
+		QUEUE_ID
+		)
+		VALUES
+		(
+		#{levelId},
+		#{groupName},
+		#{enable},
+		#{sordInGroup},
+		#{errorJobContinueRun},
+		#{cron},
+		NOW(),
+		NOW(),
+		#{referedGroupIds},
+		#{topicId},
+		#{desc},
+		#{cUser},
+		#{uUser},
+		#{parallelLimit},
+		#{timeTrigger},
+		#{queueId}
+		)
+	</insert>
+
+	<!-- 检查是否同名 -->
+	<select id="checkIfExists4New" parameterType="com.meicloud.model.Group" resultType="int">
+		<![CDATA[
+	     select count(1) from CM_GROUP where G_NAME=#{groupName}
+	   ]]>
+	</select>
+
+	<!-- 检查是否同名 -->
+	<select id="checkIfExists4Update" parameterType="com.meicloud.model.Group" resultType="int">
+		<![CDATA[
+	     select count(1) from CM_GROUP where G_NAME=#{groupName} and GROUP_ID <> #{groupId}
+	   ]]>
+	</select>
+
+	<!-- 获取组信息详情 -->
+	<select id="getById" resultMap="group" parameterType="int">
+		<![CDATA[
+	   		select
+		   		A.GROUP_ID,
+		   		A.LEVEL_ID,
+		   		A.G_NAME,
+		   		T.NAME AS P_G_NAME,
+		   		A.TOPIC_ID,
+		   		A.IS_ENABLE,
+		   		A.IS_SORT_IN_GROUP,
+		   		A.IS_ERRORJOB_CONTINUE_RUN,
+		   		A.CRON,
+		   		A.C_DATE,
+		   		A.U_DATE,
+		   		A.REFERED_GROUP_IDS,
+		   		A.`DESC`,
+		   		A.C_USER,
+		   		A.U_USER,
+		   		A.PARALLEL_LIMIT,
+		   		A.IS_TIME_TRIGGER,
+		   		A.QUEUE_ID,
+		   		(SELECT Q.QUEUE_NAME FROM CM_QUEUE Q WHERE Q.QUEUE_ID = A.QUEUE_ID) AS QUEUE_NAME,
+		   		L.LEVEL_NAME,
+		   		L.LEVEL_ORDER_NO
+		   	from CM_GROUP A
+		   		left join CM_GROUP_LEVEL L on A.LEVEL_ID=L.LEVEL_ID
+		   	    left join CM_TOPIC T on T.TOPIC_ID = A.TOPIC_ID
+		   	where
+		   		A.GROUP_ID=#{groupId}
+	   ]]>
+	</select>
+	
+	<select id="getByGroupName" resultMap="group" parameterType="java.lang.String">
+		<![CDATA[
+	   		select
+		   		A.GROUP_ID,
+		   		A.LEVEL_ID,
+		   		A.G_NAME,
+		   		T.NAME AS P_G_NAME,
+		   		A.TOPIC_ID,
+		   		A.IS_ENABLE,
+		   		A.IS_SORT_IN_GROUP,
+		   		A.IS_ERRORJOB_CONTINUE_RUN,
+		   		A.CRON,
+		   		A.C_DATE,
+		   		A.U_DATE,
+		   		A.REFERED_GROUP_IDS,
+		   		A.`DESC`,
+		   		A.C_USER,
+		   		A.U_USER,
+		   		A.PARALLEL_LIMIT,
+		   		A.IS_TIME_TRIGGER,
+		   		A.QUEUE_ID,
+		   		(SELECT Q.QUEUE_NAME FROM CM_QUEUE Q WHERE Q.QUEUE_ID = A.QUEUE_ID) AS QUEUE_NAME,
+		   		L.LEVEL_NAME,
+		   		L.LEVEL_ORDER_NO
+		   	from CM_GROUP A
+		   		left join CM_GROUP_LEVEL L on A.LEVEL_ID=L.LEVEL_ID
+		   	    left join CM_TOPIC T on T.TOPIC_ID = A.TOPIC_ID
+		   	where
+		   		A.G_NAME=#{groupName}
+	   ]]>
+	</select>
+
+	<!-- //groupName作为queryKey 若为空则查全部  -->
+	<select id="getList" resultMap="group" parameterType="com.meicloud.model.Group">
+		select
+		A.GROUP_ID,
+		A.LEVEL_ID,
+		A.G_NAME,
+		T.NAME AS P_G_NAME,
+		A.TOPIC_ID,
+		A.IS_ENABLE,
+		A.IS_SORT_IN_GROUP,
+		A.IS_ERRORJOB_CONTINUE_RUN,
+		A.CRON,
+		A.C_DATE,
+		A.U_DATE,
+		A.REFERED_GROUP_IDS,
+		A.`DESC`,
+		A.IS_TIME_TRIGGER,
+		A.QUEUE_ID,
+		(SELECT Q.QUEUE_NAME FROM CM_QUEUE Q WHERE Q.QUEUE_ID = A.QUEUE_ID) AS QUEUE_NAME,
+		L.LEVEL_NAME,
+		L.LEVEL_ORDER_NO,
+		FROM_UNIXTIME(QT.NEXT_FIRE_TIME / 1000,'%y/%m/%d %H:%i:%s') AS NEXT_FIRE_TIME
+		from
+		CM_GROUP A
+		left join CM_GROUP_LEVEL L on A.LEVEL_ID=L.LEVEL_ID
+		left join CM_TOPIC T on A.TOPIC_ID=T.TOPIC_ID
+		LEFT OUTER JOIN qrtz_triggers QT ON A.GROUP_ID = QT.TRIGGER_NAME AND A.G_NAME = QT.JOB_GROUP
+		<where>
+			1=1	
+			<if test="topicList!=null and topicList.size>0">
+				and A.TOPIC_ID IN
+				<foreach item="item" index="index" collection="topicList" open="("  separator="," close=")">
+					#{item}
+				</foreach>
+			</if>
+			<if test="groupIds!=null and groupIds.size>0">
+				and A.GROUP_ID IN
+				<foreach item="item" index="index" collection="groupIds" open="("  separator="," close=")">
+					#{item}
+				</foreach>
+			</if>
+			<if test="groupName!=null and groupName!=''">
+				AND  A.G_NAME like CONCAT(CONCAT('%',#{groupName}),'%')
+			</if>
+			<if test="topicId != 0">
+				and A.TOPIC_ID = #{topicId}
+			</if>
+			<if test="levelId != 0">
+				and A.LEVEL_ID = #{levelId}
+			</if>
+			<if test="queueId !=null and queueId !=''">
+				and A.QUEUE_ID= #{queueId}
+			</if>
+			<!-- 组内全部审核通过的 显示 -->
+			<if test="online">
+				AND (
+				SELECT
+				COUNT(*)
+				FROM
+				cm_job J
+				WHERE
+				J.GROUP_ID = A.GROUP_ID
+				) &lt;&gt; (
+				SELECT
+				COUNT(*)
+				FROM
+				cm_job J
+				WHERE
+				J.GROUP_ID = A.GROUP_ID
+				AND J.IS_ONLINE = 0
+				)
+			</if>
+			and A.TOPIC_ID &lt;&gt; 0
+			and L.LEVEL_ORDER_NO &lt;&gt; 0
+		</where>
+		order by L.LEVEL_ORDER_NO,A.G_NAME
+	</select>
+	
+	<!-- add by sujq2  合并所有参数查询  -->
+	<select id="getListByAllParameters" resultMap="group" parameterType="com.meicloud.model.Group">
+		select
+		A.GROUP_ID,
+		A.LEVEL_ID,
+		A.G_NAME,
+		T.NAME AS P_G_NAME,
+		A.TOPIC_ID,
+		A.IS_ENABLE,
+		A.IS_SORT_IN_GROUP,
+		A.IS_ERRORJOB_CONTINUE_RUN,
+		A.CRON,
+		A.C_DATE,
+		A.U_DATE,
+		A.REFERED_GROUP_IDS,
+		A.`DESC`,
+		A.IS_TIME_TRIGGER,
+		A.QUEUE_ID,
+		(SELECT Q.QUEUE_NAME FROM CM_QUEUE Q WHERE Q.QUEUE_ID = A.QUEUE_ID) AS QUEUE_NAME,
+		L.LEVEL_NAME,
+		L.LEVEL_ORDER_NO,
+		FROM_UNIXTIME(QT.NEXT_FIRE_TIME / 1000,'%y/%m/%d %H:%i:%s') AS NEXT_FIRE_TIME
+		from
+		CM_GROUP A
+		left join CM_GROUP_LEVEL L on A.LEVEL_ID=L.LEVEL_ID
+		left join CM_TOPIC T on A.TOPIC_ID=T.TOPIC_ID
+		LEFT OUTER JOIN qrtz_triggers QT ON A.GROUP_ID = QT.TRIGGER_NAME AND A.G_NAME = QT.JOB_GROUP	
+		<where>
+			1=1	
+			<if test="state!=null and state!=''">
+			and 
+			 A.GROUP_ID in (SELECT DISTINCT JS.group_id  FROM cm_job_state JS where JS.STATE = #{state} )		
+			</if>
+			
+			<if test="topicList!=null and topicList.size>0">
+				and A.TOPIC_ID IN
+				<foreach item="item" index="index" collection="topicList" open="("  separator="," close=")">
+					#{item}
+				</foreach>
+			</if>
+			<if test="groupIds!=null and groupIds.size>0">
+				and A.GROUP_ID IN
+				<foreach item="item" index="index" collection="groupIds" open="("  separator="," close=")">
+					#{item}
+				</foreach>
+			</if>
+			<if test="groupName!=null and groupName != '' ">
+				AND  A.G_NAME like CONCAT(CONCAT('%',#{groupName}),'%')
+			</if>
+			<if test="topicId != 0">
+				and A.TOPIC_ID = #{topicId}
+			</if>
+			<if test="levelId != 0">
+				and A.LEVEL_ID = #{levelId}
+			</if>
+			<if test="queueId !=null and queueId!=''">
+				and A.QUEUE_ID= #{queueId}
+			</if>
+			<!-- 组内全部审核通过的 显示 -->
+			<if test="online">
+				AND (
+				SELECT
+				COUNT(*)
+				FROM
+				cm_job J
+				WHERE
+				J.GROUP_ID = A.GROUP_ID
+				) &lt;&gt; (
+				SELECT
+				COUNT(*)
+				FROM
+				cm_job J
+				WHERE
+				J.GROUP_ID = A.GROUP_ID
+				AND J.IS_ONLINE = 0
+				)
+			</if>
+			and A.TOPIC_ID &lt;&gt; 0
+			and L.LEVEL_ORDER_NO &lt;&gt; 0
+		</where>
+		order by L.LEVEL_ORDER_NO,A.G_NAME
+	</select>
+
+	<select id="getListByTagsId" resultMap="group" parameterType="int">
+		<![CDATA[
+   		SELECT
+			G.GROUP_ID,
+			G.LEVEL_ID,
+			G.G_NAME,
+			T. NAME AS P_G_NAME,
+			G.TOPIC_ID,
+			G.IS_ENABLE,
+			G.IS_SORT_IN_GROUP,
+			A.IS_ERRORJOB_CONTINUE_RUN,
+			G.CRON,
+			G.C_DATE,
+			G.U_DATE,
+			G.REFERED_GROUP_IDS,
+			G.`DESC`,
+			G.IS_TIME_TRIGGER,
+			G.QUEUE_ID,
+			(SELECT Q.QUEUE_NAME FROM CM_QUEUE Q WHERE Q.QUEUE_ID = G.QUEUE_ID) AS QUEUE_NAME,
+	   		FROM_UNIXTIME(QT.NEXT_FIRE_TIME / 1000,'%y/%m/%d %H:%i:%s') AS NEXT_FIRE_TIME
+		FROM
+			CM_GROUP G
+		JOIN CM_TOPIC T ON G.TOPIC_ID = T.TOPIC_ID
+		JOIN CM_TAGS_REFER TR ON G.GROUP_ID = TR.GROUP_ID
+		LEFT OUTER JOIN qrtz_triggers QT ON G.GROUP_ID = QT.TRIGGER_NAME
+		WHERE
+			TR.TID = #{tagsId}
+		ORDER BY
+			G.G_NAME
+   		]]>
+	</select>
+
+	<select id="getNavCheckList" resultMap="group">
+		<![CDATA[
+   		SELECT
+			T.TOPIC_ID,
+			GL.LEVEL_ID,
+			COUNT(DISTINCT G.GROUP_ID) AS GROUP_ID
+		FROM
+			cm_topic T
+		LEFT JOIN cm_group G ON G.TOPIC_ID = T.TOPIC_ID
+		JOIN cm_group_level GL ON G.LEVEL_ID = GL.LEVEL_ID
+		GROUP BY
+			T.TOPIC_ID,
+			GL.LEVEL_ID
+   		]]>
+	</select>
+
+	<!-- 获取依赖组(前端页面添加组或修改组的时候可用) -->
+	<select id="getGroupReferOptions" resultMap="group" parameterType="com.meicloud.model.Group">
+		select
+		G.GROUP_ID,
+		G.G_NAME,
+		L.LEVEL_ORDER_NO,
+		L.LEVEL_ID
+		from
+		CM_GROUP G left join CM_GROUP_LEVEL L on G.LEVEL_ID=L.LEVEL_ID
+		<where>
+			L.LEVEL_ORDER_NO != 0
+			AND L.LEVEL_ORDER_NO &lt; #{levelOrderNo}
+			AND G.GROUP_ID != #{groupId}
+			<if test="topicId != 0">
+				AND G.TOPIC_ID = #{topicId}
+			</if>
+		</where>
+		order by G.G_NAME
+	</select>
+	<!--  G.IS_ENABLE=1  -->
+
+	<!-- 根据组id 获取该组的依赖组  前置依赖-->
+	<select id="getRefGroupById" resultMap="group" parameterType="int">
+		
+		SELECT
+			A.GROUP_ID,
+			A.LEVEL_ID,
+			A.G_NAME,
+			T. NAME AS P_G_NAME,
+			A.TOPIC_ID,
+			A.IS_ENABLE,
+			A.IS_SORT_IN_GROUP,
+			A.IS_ERRORJOB_CONTINUE_RUN,
+			A.CRON,
+			A.C_DATE,
+			A.U_DATE,
+			A.REFERED_GROUP_IDS,
+			A.`DESC`,
+			A.IS_TIME_TRIGGER,
+			A.QUEUE_ID,
+			(SELECT Q.QUEUE_NAME FROM CM_QUEUE Q WHERE Q.QUEUE_ID = A.QUEUE_ID) AS QUEUE_NAME,
+			L.LEVEL_NAME,
+			L.LEVEL_ORDER_NO
+		FROM
+			CM_GROUP_REFER R
+		LEFT JOIN CM_GROUP A ON R.REFERED_GROUP_ID = A.GROUP_ID
+		LEFT JOIN CM_GROUP_LEVEL L ON A.LEVEL_ID = L.LEVEL_ID
+		LEFT JOIN CM_TOPIC T ON A.TOPIC_ID = T.TOPIC_ID
+		WHERE
+			R.GROUP_ID = #{groupId}
+	   
+	</select>
+	<!-- AND A.IS_ENABLE = 1 -->
+
+	<!-- 根据组id 获取依赖该组 的组  后置依赖-->
+	<select id="getGroupRefById" resultMap="group" parameterType="int">
+		<![CDATA[
+			SELECT
+				G1.GROUP_ID,
+				G1.G_NAME,
+				G1.CRON,
+				L.LEVEL_NAME,
+				L.LEVEL_ORDER_NO
+			FROM
+				CM_GROUP G
+			LEFT JOIN CM_GROUP_REFER R ON R.REFERED_GROUP_ID = G.GROUP_ID
+			LEFT JOIN CM_GROUP G1 ON G1.GROUP_ID = R.GROUP_ID
+			LEFT JOIN CM_GROUP_LEVEL L ON G1.LEVEL_ID = L.LEVEL_ID
+			WHERE
+				G.GROUP_ID = #{groupId}
+	   	]]>
+	</select>
+
+	<!-- 更新组 -->
+	<update id="update" parameterType="com.meicloud.model.Group">
+		<![CDATA[
+	     update
+	     	CM_GROUP
+	     set
+	        LEVEL_ID = #{levelId,jdbcType=INTEGER},
+			G_NAME = #{groupName,jdbcType=VARCHAR},
+			IS_ENABLE = #{enable,jdbcType=TINYINT},
+			IS_SORT_IN_GROUP = #{sordInGroup,jdbcType=TINYINT},
+			IS_TIME_TRIGGER = #{timeTrigger,jdbcType=TINYINT},
+			IS_ERRORJOB_CONTINUE_RUN = #{errorJobContinueRun,jdbcType=TINYINT},
+			CRON = #{cron,jdbcType=VARCHAR},
+			REFERED_GROUP_IDS=#{referedGroupIds,jdbcType=VARCHAR},
+			TOPIC_ID = #{topicId,jdbcType=INTEGER},
+			PARALLEL_LIMIT = #{parallelLimit,jdbcType=INTEGER},
+			U_DATE=NOW(),
+			`DESC`=#{desc,jdbcType=VARCHAR},
+			C_USER=#{cUser,jdbcType=VARCHAR},
+			U_USER=#{uUser,jdbcType=VARCHAR},
+			IS_TIME_TRIGGER=#{timeTrigger,jdbcType=TINYINT},
+			QUEUE_ID=#{queueId,jdbcType=VARCHAR}
+		where
+		    GROUP_ID=#{groupId}
+	   ]]>
+	</update>
+	<!-- IS_SORT_IN_GROUP=#{sordInGroup,jdbcType=TINYINT},  -->
+
+	<update id="update2SordInGroup" parameterType="int">
+		<![CDATA[
+	     update
+	     	CM_GROUP
+	     set
+			IS_SORT_IN_GROUP = 1,
+			U_DATE=NOW()
+		where
+		    GROUP_ID IN (SELECT GROUP_ID FROM CM_JOB where JOB_ID=#{jobId})
+	   ]]>
+	</update>
+
+	<update id="update2UnSordInGroup" parameterType="int">
+		<![CDATA[
+	     update
+	     	CM_GROUP G,CM_JOB J
+	     set
+			G.IS_SORT_IN_GROUP = 0,
+			G.U_DATE=NOW(),
+			J.ORDER_NO = 0,
+			J.U_DATE = NOW()
+		where
+			G.GROUP_ID=J.GROUP_ID
+		    AND G.GROUP_ID =#{groupId}
+	   ]]>
+	</update>
+
+	<!-- 清除组关联的所有信息 -->
+	<delete id="cleanUpGroupMsg" parameterType="int">
+		<![CDATA[
+	      {call SP_CLEAN_UP_GROUP_MSG(#{inGroupId,mode=IN,jdbcType=INTEGER})}
+	   ]]>
+	</delete>
+	
+	<delete id="deleteGroupReferByGroupId" parameterType="int">
+		DELETE FROM CM_GROUP_REFER WHERE GROUP_ID = #{groupId} OR REFERED_GROUP_ID = #{groupId}
+	</delete>
+	
+	<delete id="delete" parameterType="int">
+		DELETE FROM CM_GROUP WHERE GROUP_ID = #{groupId}
+	</delete>
+
+	<select id="getGroupByLeverAndRefer" resultMap="group" parameterType="com.meicloud.model.Group">
+		<![CDATA[
+	     select distinct
+	     	cg.GROUP_ID,
+	   		cg.LEVEL_ID,
+	   		cg.G_NAME,
+	   		cg.TOPIC_ID,
+	   		cg.IS_ENABLE,
+	   		cg.IS_SORT_IN_GROUP,
+	   		cg.IS_ERRORJOB_CONTINUE_RUN,
+	   		cg.CRON,
+	   		cg.C_DATE,
+	   		cg.U_DATE,
+	   		cg.REFERED_GROUP_IDS,
+	   		cg.IS_TIME_TRIGGER,
+	   		cg.QUEUE_ID
+         from
+             CM_GROUP cg
+         where
+             cg.LEVEL_ID = #{levelId}
+          and
+         	 cg.TOPIC_ID = #{topicId}
+         order by cg.G_NAME
+	  ]]>
+	</select>
+
+	<!-- 获取历史运行的组 -->
+	<select id="getHistoryList" resultMap="group" parameterType="com.meicloud.model.Group">
+		<![CDATA[
+   		   SELECT
+				*
+			FROM
+				(
+					SELECT
+						A.GROUP_ID,
+						A.G_NAME,
+						T.NAME AS P_G_NAME,
+						A.IS_ENABLE,
+						A.CRON,
+						L.LEVEL_NAME,
+						A.U_DATE,
+						GH.RUN_GROUP_ID
+					FROM
+						CM_RUN_GROUP GH
+					LEFT JOIN CM_GROUP A ON A.GROUP_ID = GH.GROUP_ID
+					LEFT JOIN CM_GROUP_LEVEL L ON A.LEVEL_ID = L.LEVEL_ID
+					LEFT JOIN CM_TOPIC T ON A.TOPIC_ID = T.TOPIC_ID
+					WHERE A.GROUP_ID = #{groupId}
+					UNION ALL
+						SELECT
+							A.GROUP_ID,
+							A.G_NAME,
+							T.NAME AS P_G_NAME,
+							A.IS_ENABLE,
+							A.CRON,
+							L.LEVEL_NAME,
+							GH.U_DATE,
+						    GH.RUN_GROUP_ID
+						FROM
+							CM_RUN_GROUP_HIS GH
+						LEFT JOIN CM_GROUP A ON A.GROUP_ID = GH.GROUP_ID
+						LEFT JOIN CM_GROUP_LEVEL L ON A.LEVEL_ID = L.LEVEL_ID
+						LEFT JOIN CM_TOPIC T ON A.TOPIC_ID = T.TOPIC_ID
+						WHERE A.GROUP_ID = #{groupId}
+				) T
+			ORDER BY
+				T.U_DATE DESC
+	   	]]>
+	</select>
+
+	<!-- 根据状态过滤组  点击状态条-->
+	<select id="getGroupsByState" resultMap="group" parameterType="com.meicloud.model.Group">
+		SELECT
+		G.GROUP_ID,
+		G.LEVEL_ID,
+		G.G_NAME,
+		T.NAME AS P_G_NAME,
+		G.TOPIC_ID,
+		G.IS_ENABLE,
+		G.IS_SORT_IN_GROUP,
+		G.IS_ERRORJOB_CONTINUE_RUN,
+		G.CRON,
+		G.C_DATE,
+		G.U_DATE,
+		G.REFERED_GROUP_IDS,
+		G.`DESC`,
+		G.IS_TIME_TRIGGER,
+		L.LEVEL_NAME,
+		L.LEVEL_ORDER_NO,
+		G.QUEUE_ID,
+		(SELECT Q.QUEUE_NAME FROM CM_QUEUE Q WHERE Q.QUEUE_ID = G.QUEUE_ID) AS QUEUE_NAME
+		
+		FROM
+		
+		(
+		SELECT * FROM (
+			SELECT
+				JS.GROUP_ID,
+				JS.STATE,
+				COUNT(JS.JOB_ID) AS JOB_COUNT
+			FROM
+				CM_JOB_STATE JS
+			GROUP BY
+				JS.GROUP_ID,
+				JS.STATE
+		HAVING JS.STATE = #{state}
+		) T
+		
+		WHERE 1=1
+		
+		<if test="state != 5">
+			AND T.JOB_COUNT > 0
+		</if>
+		<if test="state == 5">
+			AND T.JOB_COUNT = (SELECT COUNT(*) FROM CM_JOB WHERE GROUP_ID = T.GROUP_ID AND IS_ENABLE = 1)
+		</if>
+		ORDER BY
+		T.STATE ASC
+		) S
+		LEFT JOIN CM_GROUP G ON S.GROUP_ID = G.GROUP_ID
+		LEFT JOIN CM_GROUP_LEVEL L ON G.LEVEL_ID = L.LEVEL_ID
+		LEFT JOIN CM_TOPIC T ON T.TOPIC_ID = G.TOPIC_ID
+		where
+		1=1 and G.GROUP_ID IS NOT NULL
+		<if test="queueId != null">
+			AND G.QUEUE_ID=#{queueId}
+		</if>
+	</select>
+
+	<!-- 添加一条记录到组的历史表中 -->
+	<insert id="addChlog" parameterType="com.meicloud.model.Group">
+		<![CDATA[
+	     INSERT INTO CM_GROUP_CHLOG (
+					GROUP_ID,
+					LEVEL_ID,
+					G_NAME,
+					CRON,
+					REFERED_GROUP_IDS,
+					C_DATE,
+					U_DATE,
+					IS_ENABLE,
+					IS_SORT_IN_GROUP,
+					IS_ERRORJOB_CONTINUE_RUN,
+					PROJECT_NAME,
+					NOTICE,
+					`DESC`,
+					C_USER,
+					U_USER,
+					PARALLEL_LIMIT,
+					LOG_DATE,
+					LOG_RESON,
+					TOPIC_ID,
+					IS_TIME_TRIGGER,
+					QUEUE_ID
+				)
+				SELECT
+					G.GROUP_ID,
+					G.LEVEL_ID,
+					G.G_NAME,
+					G.CRON,
+					G.REFERED_GROUP_IDS,
+					G.C_DATE,
+					G.U_DATE,
+					G.IS_ENABLE,
+					G.IS_SORT_IN_GROUP,
+					IS_ERRORJOB_CONTINUE_RUN,
+					G.`DESC`,
+					G.NOTICE,
+					G. `DESC`,
+					G.C_USER,
+					#{uUser} AS U_USER,
+					G.PARALLEL_LIMIT,
+					NOW() AS LOG_DATE,
+					#{logReson} AS LOG_RESON,
+					G.TOPIC_ID,
+					IS_TIME_TRIGGER,
+					QUEUE_ID
+				FROM
+					CM_GROUP G
+				WHERE
+					G.GROUP_ID = #{groupId}
+	   ]]>
+	</insert>
+
+	<!-- 判断组 是否有此状态的作业 -->
+	<select id="getGroupByState" resultType="String">
+		SELECT
+		JOB_ID
+		FROM
+		(
+		SELECT
+		COUNT(VS.JOB_ID) JOB_COUNT,
+		VS.JOB_ID
+		FROM
+		V_CM_JOB_STATE VS
+		LEFT JOIN CM_GROUP G ON G.GROUP_ID = VS.GROUP_ID
+		WHERE
+		VS.GROUP_ID = #{groupId}
+		AND VS.STATE = #{state}
+		<if test="state == -1">
+			AND G.IS_ENABLE = 0
+		</if>
+		) T
+		WHERE
+		1 = 1
+		<if test="state == 5">
+			AND T.JOB_COUNT = (SELECT COUNT(*) FROM CM_JOB WHERE GROUP_ID = #{groupId} AND IS_ENABLE = 1)
+		</if>
+
+	</select>
+
+	<!-- 获取组的执行时间 -->
+	<select id="groupExectime" resultMap="group" parameterType="int">
+		<![CDATA[
+   		   	SELECT
+   		   	MIN(T.START_DATE) START_DATE,
+ 		   	CASE WHEN MAX(T.END_DATE) >= MIN(T.START_DATE) THEN
+				MAX(T.END_DATE)
+			ELSE
+				NULL
+			END AS END_DATE,
+				CASE
+			WHEN T.END_DATE >= T.START_DATE THEN
+				SUM(
+					UNIX_TIMESTAMP(T.END_DATE) - UNIX_TIMESTAMP(T.START_DATE)
+				)
+			ELSE
+				NULL
+			END AS EXEC_TIME
+			FROM
+				CM_JOB J
+			LEFT JOIN CM_GROUP G ON J.GROUP_ID = G.GROUP_ID
+			LEFT JOIN CM_CHARGOR C ON J.CHARGOR_ID = C.ID
+			LEFT JOIN (
+				SELECT
+					GROUP_ID,
+					STATE,
+					JOB_ID
+				FROM
+					V_CM_JOB_STATE
+			) VS ON VS.JOB_ID = J.JOB_ID
+			LEFT JOIN (
+				SELECT
+					L.JOB_ID,
+					MAX(L.START_DATE) START_DATE,
+					MAX(L.END_DATE) END_DATE
+				FROM
+					(
+						SELECT
+							JOB_ID,
+							MIN(C_DATE) AS START_DATE,
+							MAX(C_DATE) AS END_DATE
+						FROM
+							CM_JOB_LOG
+						WHERE
+						    date(C_DATE)> DATE_SUB(NOW(),INTERVAL 5 DAY)
+						GROUP BY
+							CONSOLE_FILE
+					) L
+				GROUP BY
+					L.JOB_ID
+			) T ON T.JOB_ID = J.JOB_ID
+			WHERE
+				J.GROUP_ID = #{groupId}
+				AND J.IS_ENABLE = 1
+			GROUP BY
+				J.GROUP_ID
+	   	]]>
+	</select>
+
+	<!-- 获取所有主题数  -->
+	<select id="getTopicCount"  resultType="int">
+		<![CDATA[
+	    	SELECT COUNT(*) FROM cm_topic
+	   ]]>
+	</select>
+
+	<select id="getAllGroup"  resultMap="group">
+		<![CDATA[
+	    	SELECT
+				A.GROUP_ID,
+		   		A.LEVEL_ID,
+		   		A.G_NAME,
+		   		T.NAME AS P_G_NAME,
+		   		A.TOPIC_ID,
+		   		A.IS_ENABLE,
+		   		A.IS_SORT_IN_GROUP,
+		   		A.IS_ERRORJOB_CONTINUE_RUN,
+		   		A.CRON,
+		   		A.C_DATE,
+		   		A.U_DATE,
+		   		A.REFERED_GROUP_IDS,
+		   		A.`DESC`,
+		   		A.C_USER,
+		   		A.U_USER,
+		   		A.PARALLEL_LIMIT,
+		   		A.IS_TIME_TRIGGER,
+		   		A.QUEUE_ID,
+		   		(SELECT Q.QUEUE_NAME FROM CM_QUEUE Q WHERE Q.QUEUE_ID = A.QUEUE_ID) AS QUEUE_NAME,
+		   		L.LEVEL_NAME,
+		   		L.LEVEL_ORDER_NO
+		   	from CM_GROUP A
+		   		left join CM_GROUP_LEVEL L on A.LEVEL_ID=L.LEVEL_ID
+		   	    left join CM_TOPIC T on T.TOPIC_ID = A.TOPIC_ID
+	   ]]>
+	</select>
+
+	<select id="getAllEnableGroup"  resultMap="group">
+		<![CDATA[
+	    	SELECT
+				A.GROUP_ID,
+		   		A.LEVEL_ID,
+		   		A.G_NAME,
+		   		T.NAME AS P_G_NAME,
+		   		A.TOPIC_ID,
+		   		A.IS_ENABLE,
+		   		A.IS_SORT_IN_GROUP,
+		   		A.IS_ERRORJOB_CONTINUE_RUN,
+		   		A.CRON,
+		   		A.C_DATE,
+		   		A.U_DATE,
+		   		A.REFERED_GROUP_IDS,
+		   		A.`DESC`,
+		   		A.C_USER,
+		   		A.U_USER,
+		   		A.PARALLEL_LIMIT,
+		   		A.IS_TIME_TRIGGER,
+		   		A.QUEUE_ID,
+		   		(SELECT Q.QUEUE_NAME FROM CM_QUEUE Q WHERE Q.QUEUE_ID = A.QUEUE_ID) AS QUEUE_NAME,
+		   		L.LEVEL_NAME,
+		   		L.LEVEL_ORDER_NO
+		   	from CM_GROUP A
+		   		left join CM_GROUP_LEVEL L on A.LEVEL_ID=L.LEVEL_ID
+		   	    left join CM_TOPIC T on T.TOPIC_ID = A.TOPIC_ID
+			WHERE
+				A.IS_ENABLE = 1
+	   ]]>
+	</select>
+
+	<select id="getAllEnableGroupByCron"  parameterType="java.lang.String"  resultMap="group">
+		<![CDATA[
+	    	SELECT
+				A.GROUP_ID,
+		   		A.LEVEL_ID,
+		   		A.G_NAME,
+		   		T.NAME AS P_G_NAME,
+		   		A.TOPIC_ID,
+		   		A.IS_ENABLE,
+		   		A.IS_SORT_IN_GROUP,
+		   		A.IS_ERRORJOB_CONTINUE_RUN,
+		   		A.CRON,
+		   		A.C_DATE,
+		   		A.U_DATE,
+		   		A.REFERED_GROUP_IDS,
+		   		A.`DESC`,
+		   		A.C_USER,
+		   		A.U_USER,
+		   		A.PARALLEL_LIMIT,
+		   		A.IS_TIME_TRIGGER,
+		   		A.QUEUE_ID,
+		   		(SELECT Q.QUEUE_NAME FROM CM_QUEUE Q WHERE Q.QUEUE_ID = A.QUEUE_ID) AS QUEUE_NAME,
+		   		L.LEVEL_NAME,
+		   		L.LEVEL_ORDER_NO
+		   	from CM_GROUP A
+		   		left join CM_GROUP_LEVEL L on A.LEVEL_ID=L.LEVEL_ID
+		   	    left join CM_TOPIC T on T.TOPIC_ID = A.TOPIC_ID
+			WHERE
+				A.IS_ENABLE = 1
+				AND A.CRON=#{cron}
+	   ]]>
+	</select>
+
+	<select id="forwardActiveAndEvenTriggerGroupIds" parameterType="int" resultType="int">
+		<![CDATA[
+	    SELECT
+			GROUP_ID
+		FROM
+			cm_group G
+		WHERE
+			INSTR(
+				(
+					SELECT
+						FORWARD_GROUP_IDS (#{currentGroupId})
+				),
+				GROUP_ID
+			)
+		AND G.IS_ENABLE = 1
+		AND G.IS_TIME_TRIGGER = 0
+		AND GROUP_ID <> #{currentGroupId}
+	   ]]>
+	</select>
+
+	<select id="getHeaderCountEditPage"  resultMap="nvp">
+	    SELECT
+						t.TY AS `NAME`,
+						t.CN AS `ID`
+					FROM
+			(
+			SELECT
+				'主题数' AS `TY`,
+				count(`cm_topic`.`TOPIC_ID`) AS `CN`,
+				`cm_topic`.`QUEUE_ID` AS `QUEUE_ID`
+			FROM
+				`cm_topic`
+			GROUP BY
+				`cm_topic`.`QUEUE_ID`
+			UNION
+				SELECT
+					'总数量' AS `TY`,
+					count(`j`.`JOB_ID`) AS `CN`,
+					`g`.`QUEUE_ID` AS `QUEUE_ID`
+				FROM
+					(
+						`cm_job` `j`
+						JOIN `cm_group` `g` ON (
+							(
+								`j`.`GROUP_ID` = `g`.`GROUP_ID`
+							)
+						)
+					)
+				GROUP BY
+					`g`.`QUEUE_ID`
+				UNION
+					SELECT
+						'启用数' AS `TY`,
+						count(`j`.`JOB_ID`) AS `CN`,
+						`g`.`QUEUE_ID` AS `QUEUE_ID`
+					FROM
+						(
+							`cm_job` `j`
+							JOIN `cm_group` `g` ON (
+								(
+									`j`.`GROUP_ID` = `g`.`GROUP_ID`
+								)
+							)
+						)
+					WHERE
+						(
+							(`j`.`IS_ENABLE` = 1)
+							AND (`g`.`IS_ENABLE` = 1)
+						)
+					GROUP BY
+						`g`.`QUEUE_ID`
+					UNION
+						SELECT
+							'禁用数' AS `TY`,
+							count(`j`.`JOB_ID`) AS `CN`,
+							`g`.`QUEUE_ID` AS `QUEUE_ID`
+						FROM
+							(
+								`cm_job` `j`
+								JOIN `cm_group` `g` ON (
+									(
+										`j`.`GROUP_ID` = `g`.`GROUP_ID`
+									)
+								)
+							)
+						WHERE
+							(
+								(`j`.`IS_ENABLE` = 0)
+								OR (`g`.`IS_ENABLE` = 0)
+							)
+						GROUP BY
+							`g`.`QUEUE_ID`) t
+			<if test="_parameter != null">
+				WHERE t.QUEUE_ID =#{queueId}
+			</if>
+	</select>
+
+	<select id="getHeaderCountRunPage"  resultMap="nvp">
+	    SELECT
+			TYPE AS `NAME`,
+			STATE AS `VALUE`,
+			COUNT(JOB_ID) AS `ID`
+		FROM
+			v_run_header
+		<if test="_parameter != null">
+			WHERE QUEUE_ID =#{queueId}
+		</if>
+
+		GROUP BY
+			STATE
+		ORDER BY
+			STATE ASC
+	</select>
+
+	
+	<select id="findAllGroup" resultMap="groupInfo" >
+	   		select 
+		   		A.GROUP_ID,
+		   		A.G_NAME
+		   	from CM_GROUP A 
+		   	where 1=1
+	</select>
+
+
+	<select id="findListByGroupIds" resultMap="groupInfo" parameterType="com.meicloud.dto.CommonVO">
+		select
+		A.GROUP_ID,
+		A.G_NAME
+		from CM_GROUP A
+		where 1=1
+	<if test="groupIds!=null and groupIds.size >0 ">
+		and A.GROUP_ID IN
+		<foreach item="item" index="index" collection="groupIds" open="("  separator="," close=")">
+			#{item}
+		</foreach>
+	</if>
+	</select>
+	
+</mapper>
