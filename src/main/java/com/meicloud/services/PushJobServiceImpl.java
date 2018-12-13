@@ -143,7 +143,9 @@ public class PushJobServiceImpl implements PushJobService {
    public void pushJob(int groupId, int pushType) throws Exception {
       try {
          if(pushType == 0) {
+            //把自己这个任务的所有job放到running job map当中等待调度
             this.pushCurrentGroup(groupId, 0);
+            //通过深度优先的方式递归找出所有要被调度起来的任务
             List e = this.complete(groupId, new ArrayList());
             LOG.info("forwardActiveAndEvenTriggerGroupIds:" + e);
             int successForwardGroupCount = 0;
@@ -172,13 +174,16 @@ public class PushJobServiceImpl implements PushJobService {
    private List complete(int groupId, List forwardActiveAndEvenTriggerGroupIds) throws Exception {
       GroupRefer groupRefer = new GroupRefer();
       groupRefer.setGroupId(groupId);
+      //找到依赖我这个人的列表
       List groupRefers = this.groupReferMapper.getPostList(groupId);
       if(groupRefers != null && groupRefers.size() > 0) {
          Iterator var6 = groupRefers.iterator();
 
          while(var6.hasNext()) {
             GroupRefer refer = (GroupRefer)var6.next();
+            //找到所有依赖我的group
             Group groupDB = this.groupMapper.getById(refer.getGroupId());
+            //是否依赖触发
             if(groupDB != null && !groupDB.isTimeTrigger()) {
                if(forwardActiveAndEvenTriggerGroupIds == null) {
                   forwardActiveAndEvenTriggerGroupIds = new ArrayList();
@@ -196,6 +201,8 @@ public class PushJobServiceImpl implements PushJobService {
    private void pushCurrentGroup(int groupId, int pushType) {
       JobPusherParam jobPusherParam = new JobPusherParam();
       jobPusherParam.setGroupId(groupId);
+      //去表里查，当前如果有这个group的job正在运行则不调度这次任务
+      //如果说是手动调起来的话就不用care当前是否有job在run，直接顶掉
       if(pushType != 2) {
          boolean referedGroupIds = this.runJobMapper.hasRunningJobsInRunTime(jobPusherParam);
          if(referedGroupIds) {
@@ -213,6 +220,8 @@ public class PushJobServiceImpl implements PushJobService {
 
       String referedGroupIds2 = "";
       String referedJobIds = "";
+      //这个2到底代表什么意思，这两个函数就是把依赖的groupId和jobId取出来，然后用,分割
+      //如果手动调也不会去看我依赖的某些任务
       if(pushType != 2) {
          referedGroupIds2 = this.getDirectReferedGroupIds(groupId);
          referedJobIds = this.getReferedJobIds(groupId);
@@ -221,8 +230,11 @@ public class PushJobServiceImpl implements PushJobService {
       jobPusherParam.setReferedGroupIds(referedGroupIds2);
       jobPusherParam.setReferedJobIds(referedJobIds);
       jobPusherParam.setPushType(pushType);
+      //把当前运行的这个job放到history当中去
       this.runGroupMapper.copy2His(groupId);
+      //把原来的running job删除掉
       this.runGroupMapper.delete(groupId);
+      //把job从cm_group放到cm_run_group里面
       this.runGroupMapper.addByGroup(jobPusherParam);
       RunGroup runGroup = this.runGroupMapper.getRunGroupByGroupId(groupId);
       int runGroupId = runGroup == null?0:runGroup.getRunGroupId();
@@ -231,6 +243,7 @@ public class PushJobServiceImpl implements PushJobService {
       } else {
          LOG.info("finish push group [" + groupId + "] rungroupId [" + runGroupId + "] and about to push job.");
          jobPusherParam.setRunGroupId(runGroupId);
+         //三种任务触发方式，0：cron，1：依赖触发 2：手工触发
          if(pushType == 0) {
             jobPusherParam.setMsg("PUSH FROM CM_JOB BY SYSTEM CRON.");
          } else if(pushType == 1) {
@@ -243,6 +256,7 @@ public class PushJobServiceImpl implements PushJobService {
          this.runJobMapper.copy2HisByGroupId(runGroup.getGroupId());
          this.runJobMapper.deleteByGroupId(runGroup.getGroupId());
          this.runJobMapper.addByGroup(jobPusherParam);
+         //将Group相关的Job状态都刷新
          this.runJobMapper.updateJobStateBySatrt(jobPusherParam);
          int pushJobCount = this.runJobMapper.getRunJobCountByGroupId(runGroupId).intValue();
          String msg = "finish push GROUP groupId:[" + groupId + "] runGroupId:[" + runGroupId + "] referedGroupIds:[" + referedGroupIds2 + "] pushJobCount:[" + pushJobCount + "] to runtime pushType [" + pushType + "]";

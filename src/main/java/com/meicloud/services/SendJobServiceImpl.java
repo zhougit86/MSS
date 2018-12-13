@@ -51,6 +51,7 @@ public class SendJobServiceImpl implements SendJobService {
 
          while(sb.hasNext()) {
             RunJob runJobId = (RunJob)sb.next();
+            //验证是否能发送
             boolean runJob = runJobId != null && runJobId.validateSend();
             if(runJob) {
                validateList.add(runJobId);
@@ -66,6 +67,7 @@ public class SendJobServiceImpl implements SendJobService {
             StringBuffer sb1 = new StringBuffer();
             Iterator parmRunJob = validateList.iterator();
 
+            //建了一个groupid到job list得哈希
             while(parmRunJob.hasNext()) {
                runJob2 = (RunJob)parmRunJob.next();
                List paralleMap = (List)runJobId1.get(Integer.valueOf(runJob2.getGroupId()));

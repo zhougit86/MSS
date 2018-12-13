@@ -40,6 +40,7 @@ public class CheckJobAndSendJob implements Job {
 
    public void execute(JobExecutionContext context) {
       try {
+         System.out.println("xiaogang:begin execute");
          this.init(context);
          this.jobCheckAndUpdateService.doCheckAndSend();
       } catch (Exception var3) {

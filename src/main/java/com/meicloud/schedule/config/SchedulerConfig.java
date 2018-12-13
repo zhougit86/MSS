@@ -2,6 +2,8 @@ package com.meicloud.schedule.config;
 
 import com.meicloud.schedule.config.JobFactory;
 import java.util.Properties;
+
+import groovy.lang.Singleton;
 import org.quartz.ee.servlet.QuartzInitializerListener;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
